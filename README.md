@@ -155,8 +155,8 @@ python LeafcutterITI_clustering --map transcript_intron_map.tsv --count_files qu
 
 
 Two main output files will be obtained:
-{out_prefix}refined_cluster
-{output_prefix}ratio_count
+- {out_prefix}refined_cluster
+- {output_prefix}ratio_count
 
 sample {out_prefix}refined_cluster
 ```
