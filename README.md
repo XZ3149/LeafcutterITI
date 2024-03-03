@@ -170,7 +170,7 @@ chr1:668593:672093:clu_2 11 16 23 2.5 3 20 9
 
 
 ### Step 4:
-The output from step 3 is equivalent to leafcutter clustering, and the results are compatible with downstream analysis for Leafcutter, such as Leafcutter_ds and Leafviz. 
+The output from step 3 is equivalent to results from leafcutter clustering, and the results are compatible with downstream analysis for Leafcutter, such as Leafcutter_ds and Leafviz. 
 Further information and downstream analysis please refer to https://davidaknowles.github.io/leafcutter/index.html
 
 
