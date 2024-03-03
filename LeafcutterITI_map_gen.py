@@ -89,7 +89,7 @@ def compute_transcript_intron_map(annot, out_prefix = '', annot_type = 'gencode'
     num_rows = len(df) - 1
 
 
-    output = open(f'{out_prefix}transcript_intron_map.tsv', 'w')
+    output = open(f'{out_prefix}isoform_intron_map.tsv', 'w')
 
     if annot_type != 'Stringtie':
         print('Chr Gene Transcript support_introns support_exons Transcript_type', file = output)
@@ -369,7 +369,7 @@ def add_virtual_first_last_introns(trancript_to_intron_map, intron_to_exon_map, 
     
 
     list_virtual.close()
-    df.to_csv(f'{out_prefix}transcript_intron_map_with_virtual.tsv', sep = ' ', index=False)
+    df.to_csv(f'{out_prefix}isoform_intron_map_with_virtual.tsv', sep = ' ', index=False)
     intron_exon_df = intron_exon_df.append(pd.DataFrame(intron_exon_list, columns = ['intron', 'near_exons', 'strand']), ignore_index=True)
     intron_exon_df.to_csv(f'{out_prefix}intron_exon_connectivity_with_virtual.tsv', sep = ' ', index=False)    
 
@@ -409,14 +409,14 @@ def LeafcutterITI_map_generation(options):
         
     out_prefix = options.outprefix    
     if options.annot_source == 'gencode':
-        intron_source_generation(f'{out_prefix}transcript_intron_map.tsv',out_prefix)
+        intron_source_generation(f'{out_prefix}isoform_intron_map.tsv',out_prefix)
         
     if options.virtual_intron == True:
         
         f'{out_prefix}intron_exon_connectivity.tsv'
-        f'{out_prefix}transcript_intron_map.tsv'
+        f'{out_prefix}isoform_intron_map.tsv'
 
-        add_virtual_first_last_introns(f'{out_prefix}transcript_intron_map.tsv', f'{out_prefix}intron_exon_connectivity.tsv',\
+        add_virtual_first_last_introns(f'{out_prefix}isoform_intron_map.tsv', f'{out_prefix}intron_exon_connectivity.tsv',\
                                         out_prefix)
 
 
