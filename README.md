@@ -158,7 +158,7 @@ Two main output files will be obtained:
 {out_prefix}refined_cluster
 {output_prefix}ratio_count
 
-sample refined cluster file
+sample {out_prefix}refined_cluster
 ```
 sample1.sf sample2.sf sample3.sf sample4.sf sample5.sf sample6.sf
 chr1:17055:17233:clu_1 21.1 13 18 20 17 12 
