@@ -121,9 +121,9 @@ python LeafcutterITI_map_gen -a gencode.v45.annotation.gtf --annot_source gencod
 
 
 Depending on the setting, two or four files will be generated.
-- {out_prefix}transcript_intron_map.tsv
+- {out_prefix}isoform_intron_map.tsv
 - {out_prefix}intron_exon_connectivity.tsv
-- {out_prefix}transcript_intron_map_with_virtual.tsv
+- {out_prefix}isoform_intron_map_with_virtual.tsv
 - {out_prefix}intron_exon_connectivity_with_virtual.tsv
 
 where with_virtual mean virtual intron was used to capture AFE and ALE (testing feature). Both transcript_intron_map.tsv and intron_exon_connectivity.tsv
