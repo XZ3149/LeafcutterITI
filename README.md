@@ -28,7 +28,7 @@ By Xingpei Zhang
 ## LeafcutterITI
 A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. 
 
-
+![LeafcutterITI Workflow](figures/LeafcutterITI workflow.png)
 
 
 
