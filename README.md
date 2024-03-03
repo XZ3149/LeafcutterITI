@@ -158,15 +158,19 @@ Two main output files will be obtained:
 {out_prefix}refined_cluster
 {output_prefix}ratio_count
 
-These two files are equivalent to Leafcutter clustering numers.counts.gz and counts.gz. It is worth noticing that the normalized count or TPM is not necessarily an integer, but the normalized count will exhibit a count-like property.
+sample refined cluster file
 ```
 sample1.sf sample2.sf sample3.sf sample4.sf sample5.sf sample6.sf
 chr1:17055:17233:clu_1 21.1 13 18 20 17 12 
 chr1:17055:17606:clu_1 4 11.4 12 7 2 0 5 
 chr1:17368:17606:clu_1 127 132 128 55 93 90 68 
 chr1:668593:668687:clu_2 3 11.3 1 3 4 4 8 
-chr1:668593:672093:clu_2 11 16 23 2.5 3 20 9 
+chr1:668593:672093:clu_2 11 16 23 2.5 3 20 9
 ```
+
+These two files are equivalent to Leafcutter clustering numers.counts.gz and counts.gz. It is worth noticing that the normalized count or TPM is not necessarily an integer, but the normalized count will exhibit a count-like property.
+
+
 
 
 ### Step 4:
