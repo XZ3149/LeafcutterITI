@@ -66,7 +66,35 @@ Optional Parameters:
 ### LeafcutterITI_clustering
 
 ```
-usage: python leafcutterITI_clustering.py
+usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
+                    [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+
+Mandatory parameters:
+--map             The isoforms to introns map generated from leafcutterITI_map_gen  (default: None)
+
+--count_files     A txt file that contain the sample names (default: None)
+
+--connect_file    The intron-exon connectivity file generated from leafcutterITI_map_gen (default: None)
+
+-a, --annot       The transcriptome annotation gtf file (default: None)
+
+
+Optional Parameters:
+--cluster_def           The definition used for cluster refinement, three def available, 1: overlap, 2: overlap+share_intron_splice_site, 
+                        3: overlap+share_intron_splice_site+shared_exon_splice_site (default: 3)
+
+-o, --outprefix         The prefix for output files (default: Leafcutter_)
+
+-n, --normalization     whether to performance normalization, if not use TPM directly
+
+--samplecutoff          minimum count for an intron in a sample to count as exist (default: 0)
+
+--introncutoff          minimum count for an intron to count as exist(default 5)
+
+--m, --minclucounts     minimum to support a cluster (default: 30)
+
+-r, --mincluratio       minimum fraction of reads in a cluster that supports an intron (default 0.01)
 
 ```
 
