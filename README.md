@@ -86,13 +86,16 @@ Optional Parameters:
 
 -o, --outprefix         The prefix for output files (default: Leafcutter_)
 
--n, --normalization     whether to performance normalization, if not use TPM directly
+-n, --normalization     whether to performance normalization, if not use TPM directly (default: True)
 
---samplecutoff          minimum count for an intron in a sample to count as exist (default: 0)
+--preprocessed          whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
+                        perform normalization again (default: False) 
 
---introncutoff          minimum count for an intron to count as exist(default 5)
+--samplecutoff          minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
 
---m, --minclucounts     minimum to support a cluster (default: 30)
+--introncutoff          minimum Normalized count/TPM for an intron to count as exist(default 5)
+
+--m, --minclucounts     minimum Normalized count/TPM to support a cluster (default: 30)
 
 -r, --mincluratio       minimum fraction of reads in a cluster that supports an intron (default 0.01)
 
