@@ -43,7 +43,7 @@ usage: python leafcutterITI_map_gen.py [-a/--annot] [--annot_source] [-o/--outpr
 
 Mandatory parameters:
 
--a, --annot     The transcriptome annotation gtf file for LeafcutterITI_map_gen to run with (default: None)
+-a, --annot     The transcriptome annotation gtf file for LeafcutterITI_map_gen to run with 
 
 Optional Parameters:
 
@@ -71,13 +71,13 @@ usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_fil
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
 
 Mandatory parameters:
---map             The isoforms to introns map generated from leafcutterITI_map_gen  (default: None)
+--map             The isoforms to introns map generated from leafcutterITI_map_gen  
 
---count_files     A txt file that contain the sample names (default: None)
+--count_files     A txt file that contain the sample names 
 
---connect_file    The intron-exon connectivity file generated from leafcutterITI_map_gen (default: None)
+--connect_file    The intron-exon connectivity file generated from leafcutterITI_map_gen 
 
--a, --annot       The transcriptome annotation gtf file (default: None)
+-a, --annot       The transcriptome annotation gtf file 
 
 
 Optional Parameters:
