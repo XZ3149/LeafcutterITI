@@ -1,21 +1,19 @@
 from setuptools import find_packages, setup
-
 import setuptools
 
-if __name__ == "__main__":
-    setuptools.setup(py_modules = ["leafcutter"])
 
-if False: 
-    setup(
+
+setup(
         name='leafcutterITI',
         packages=find_packages(),
-        version='0.1.0',
+        version='0.1.8',
         description='LeafcutterITI implementation',
         author='Xingpei Zhang, David A Knowles',
         license='MIT',
         entry_points={
             'console_scripts': [
-                'leafcutter-ds = leafcutter.__main__:leafcutter_ds',
+                'leafcutterITI-map = leafcutter.__main__:leafcutterITI_map_gen',
+                'leafcutterITI-cluster = leafcutter.__main__:leafcutterITI_clustering'
             ],
         },
     )
