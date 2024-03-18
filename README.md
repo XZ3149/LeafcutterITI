@@ -39,6 +39,10 @@ There are two parts of LeafcutterITI:
 ```
 usage: python leafcutterITI_map_gen.py [-a/--annot] [--annot_source] [-o/--outprefix] 
                      [--maxintronlen] [--minintronlen] [-v/--virtual_intron]
+or when install with pip
+leafcutterITI-map [-a/--annot] [--annot_source] [-o/--outprefix] 
+                     [--maxintronlen] [--minintronlen] [-v/--virtual_intron]
+
 
 Mandatory parameters:
 
@@ -68,6 +72,11 @@ Optional Parameters:
 usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+or when install with pip
+leafcutterITI-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
+                    [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+
 
 Mandatory parameters:
 --map             The isoforms to introns map generated from leafcutterITI_map_gen  
