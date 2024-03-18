@@ -1,6 +1,5 @@
 # LeafCutterITI
 
-By Xingpei Zhang
 
 ### Citation:
 **Alamancos, G. P., Pagès, A., Trincado, J. L., Bellora, N., & Eyras, E. (2015). Leveraging transcript quantification for fast computation of alternative splicing profiles. RNA , 21(9), 1521–1531. https://doi.org/10.1261/rna.051557.115**
