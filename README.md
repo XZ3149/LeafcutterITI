@@ -1,6 +1,5 @@
 # LeafCutterITI
 
-By Xingpei Zhang
 
 ### Citation:
 **Alamancos, G. P., Pagès, A., Trincado, J. L., Bellora, N., & Eyras, E. (2015). Leveraging transcript quantification for fast computation of alternative splicing profiles. RNA , 21(9), 1521–1531. https://doi.org/10.1261/rna.051557.115**
@@ -26,7 +25,7 @@ By Xingpei Zhang
 #### Other dependencies for Leafcutter as listed in https://github.com/davidaknowles/leafcutter/tree/master, especially for Leafcutter_ds
 
 ## LeafcutterITI
-A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. 
+A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. Can also be install as a command line tool with pip install leafcutterITI
 
 ![LeafcutterITI_Workflow](figures/LeafcutterITI_workflow.png)
 
@@ -40,6 +39,10 @@ There are two parts of LeafcutterITI:
 ```
 usage: python leafcutterITI_map_gen.py [-a/--annot] [--annot_source] [-o/--outprefix] 
                      [--maxintronlen] [--minintronlen] [-v/--virtual_intron]
+or when install with pip
+leafcutterITI-map [-a/--annot] [--annot_source] [-o/--outprefix] 
+                     [--maxintronlen] [--minintronlen] [-v/--virtual_intron]
+
 
 Mandatory parameters:
 
@@ -69,6 +72,11 @@ Optional Parameters:
 usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+or when install with pip
+leafcutterITI-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
+                    [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+
 
 Mandatory parameters:
 --map             The isoforms to introns map generated from leafcutterITI_map_gen  
