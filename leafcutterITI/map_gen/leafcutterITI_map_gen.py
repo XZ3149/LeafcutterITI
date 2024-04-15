@@ -424,7 +424,6 @@ def LeafcutterITI_map_generation(options):
 
 
 
-
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -477,8 +476,6 @@ if __name__ == "__main__":
     LeafcutterITI_map_generation(options)
     
     sys.stderr.write('Finish building Isofrom to intron map')
-
-
 
 
 

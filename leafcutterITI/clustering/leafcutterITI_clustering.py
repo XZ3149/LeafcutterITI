@@ -240,7 +240,7 @@ def build_init_cluster(intron_count_file):
 
     # Initialize variables for tracking clusters
     cluster_num = 1
-    cluster_gene = df.iloc[0]['Gene'] 
+    #cluster_gene = df.iloc[0]['Gene'] 
     cluster_end = df.iloc[0]['End']
     cluster_chr = df.iloc[0]['Chr']
 
@@ -249,16 +249,16 @@ def build_init_cluster(intron_count_file):
         nonlocal cluster_num
         nonlocal cluster_chr
         nonlocal cluster_end
-        nonlocal cluster_gene #used in previous version, plan to removed in further version
+        #nonlocal cluster_gene #used in previous version, plan to removed in further version
         
 
         # Start a new cluster if the gene changes or there's no overlap with the current cluster
         # no need to check for sttart as we sort value based on Start
         if row['Chr'] != cluster_chr or row['Start'] > cluster_end:
             cluster_num += 1
-            cluster_gene = row['Gene']
             cluster_end = row['End']
             cluster_chr = row['Chr']
+            #cluster_gene = row['Gene']
             
         else:
             cluster_end = max(cluster_end, row['End'])
