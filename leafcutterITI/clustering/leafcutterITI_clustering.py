@@ -306,7 +306,11 @@ def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_p
     intron_to_exon = pd.read_csv(intron_to_exon_file, sep = ' ', index_col = 0)
     
     num_cluters = 0
-    samples = list(initial_clus.columns[5:])
+    if "Gene" in initial_clus.tolist(): # deal with the result from different version
+        samples = initial_clus.tolist()[5:]
+    else:
+        samples = initial_clus.tolist()[4:]
+    
     output = open(f'{out_prefix}refined_cluster', 'w')
     
     out_str = ''
