@@ -274,8 +274,6 @@ def build_init_cluster(intron_count_file):
 
 
 
-
-
 @timing_decorator
 def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_prefix = '', mode = 3,
                      cutoff = 0.1, percent_cutoff = 0.01, min_cluster_val = 1):
@@ -306,10 +304,12 @@ def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_p
     intron_to_exon = pd.read_csv(intron_to_exon_file, sep = ' ', index_col = 0)
     
     num_cluters = 0
-    if "Gene" in initial_clus.tolist(): # deal with the result from different version
-        samples = initial_clus.tolist()[5:]
+    if "Gene" in initial_clus.columns.tolist(): # deal with the result from different version
+        samples = initial_clus.columns.tolist()[5:]
+        contained_gene = True
     else:
-        samples = initial_clus.tolist()[4:]
+        samples = initial_clus.columns.tolist()[4:]
+        contained_gene = False
     
     output = open(f'{out_prefix}refined_cluster', 'w')
     
@@ -383,10 +383,17 @@ def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_p
                     strand = str(intron_to_exon.loc[clu_intron[3]]['strand'])
                     
                     out_str += f'{infor.Chr}:{infor.Start}:{infor.End}:clu_{num_cluters}_{strand}'
-                    for value in list(infor)[5:-1]: # start of sample values, and not include the sum columns
-                        out_str += f' {value}'
-                        clu_val += float(value)
                     
+                    if contained_gene == True:
+                        
+                        for value in list(infor)[5:-1]: # start of sample values, and not include the sum columns
+                            out_str += f' {value}'
+                            clu_val += float(value)
+                    else:
+                        for value in list(infor)[4:-1]: # start of sample values, and not include the sum columns
+                            out_str += f' {value}'
+                            clu_val += float(value)
+                            
                     out_str += '\n'
             
                 if clu_val <= min_cluster_val:
@@ -398,6 +405,7 @@ def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_p
                 num_cluters += 1
 
     output.close()
+
 
 
 
