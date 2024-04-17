@@ -5,7 +5,9 @@ import sys
 import warnings
 import leafcutterITI.utils
 from leafcutterITI.utils import timing_decorator,write_options_to_file
-
+import scipy
+import scipy.sparse
+from scipy.sparse import csr_matrix, save_npz, load_npz
 from optparse import OptionParser
 
 warnings.simplefilter(action='ignore', category=pd.errors.DtypeWarning)
@@ -235,6 +237,132 @@ def print_near_exon_dic(near_exon_dic, intron_str_dic, out_prefix):
     
     output.close()
     
+    
+
+
+
+def isoform_intron_exon_sparse_generation(isoform_intron_map_file, out_prefix = ''):
+    """
+    This function will generate two sparse matrices that map isoform to intron and exon     
+
+    Returns
+    -------
+    None.
+
+    """
+
+
+    df = pd.read_csv(isoform_intron_map_file, sep = ' ')
+
+
+    isoform_to_introns = dict(zip(df['Transcript'], df['support_introns']))
+    isoform_to_exons = dict(zip(df['Transcript'], df['support_exons']))
+
+
+
+    for isoform, introns in isoform_to_introns.items():
+    # Check if introns is not NaN (using pandas isna() function)
+        if pd.isna(introns):
+            isoform_to_introns[isoform] = []
+        else:
+            isoform_to_introns[isoform] = introns.split(',')
+
+
+    for isoform, exons in isoform_to_exons.items():
+    # Check if introns is not NaN (using pandas isna() function)
+        if pd.isna(exons):
+            isoform_to_exons[isoform] = []
+        else:
+            isoform_to_exons[isoform] = exons.split(',')
+
+
+
+    # Step 1: Extract unique isoforms and introns
+    all_isoforms = list(isoform_to_introns.keys())
+    
+    all_introns = set()
+    for introns in isoform_to_introns.values():
+        all_introns.update(introns)
+    all_introns = list(all_introns)    
+    
+    all_exons = set()
+    for exons in isoform_to_exons.values():
+        all_exons.update(exons)
+    all_exons = list(all_exons)
+
+
+
+    # Step 2: Create mappings to indices
+    isoform_to_index = {isoform: i for i, isoform in enumerate(all_isoforms)}
+    intron_to_index = {intron: i for i, intron in enumerate(all_introns)}
+    exon_to_index = {exon: i for i, exon in enumerate(all_exons)}
+
+
+
+
+    # Step 3: Populate the matrix
+    row_indices = []
+    col_indices = []
+    for isoform, introns in isoform_to_introns.items():
+        row_index = isoform_to_index[isoform]
+        for intron in introns:
+            col_index = intron_to_index[intron]
+            row_indices.append(row_index)
+            col_indices.append(col_index)
+
+    num_rows = len(all_isoforms)
+    num_intron_cols = len(all_introns)
+
+
+    isoform_intron_matrix = scipy.sparse.coo_matrix(
+        ( [1]*len(row_indices), (row_indices, col_indices) ),
+        shape=(num_rows, num_intron_cols)
+        )
+
+
+    row_indices = []
+    col_indices = []
+    for isoform, exons in isoform_to_exons.items():
+        row_index = isoform_to_index[isoform]
+        for exon in exons:
+            col_index = exon_to_index[exon]
+            row_indices.append(row_index)
+            col_indices.append(col_index)
+
+    num_exon_cols = len(all_exons)
+    
+    isoform_exon_matrix = scipy.sparse.coo_matrix(
+        ( [1]*len(row_indices), (row_indices, col_indices) ),
+        shape=(num_rows, num_exon_cols)
+        )
+
+
+
+    save_npz(f'{out_prefix}isoform_intron_matrix.npz', isoform_intron_matrix)
+    save_npz(f'{out_prefix}isoform_exon_matrix.npz', isoform_exon_matrix)
+
+
+    with open(f'{out_prefix}isoform_rows.txt', 'w') as output:
+        for isoform in all_isoforms:
+            print(isoform, file= output)
+
+    with open(f'{out_prefix}intron_cols.txt', 'w') as output:
+        for intron in all_introns:
+            print(intron, file= output)
+
+    with open(f'{out_prefix}exon_cols.txt', 'w') as output:
+        for exon in all_exons:
+            print(exon, file= output)
+
+
+
+
+    
+    
+    
+    
+    
+    
 ##############################################################################################
 
 #these function is some additional features, not fully tested yet
@@ -409,6 +537,10 @@ def LeafcutterITI_map_generation(options):
                                   quality_control= options.quality_control)
         
     out_prefix = options.outprefix    
+    
+    if options.single_cell == True:
+        isoform_intron_exon_sparse_generation(f'{out_prefix}isoform_intron_map.tsv', out_prefix)
+        
     if options.annot_source == 'gencode':
         intron_source_generation(f'{out_prefix}isoform_intron_map.tsv',out_prefix)
         
@@ -451,7 +583,12 @@ if __name__ == "__main__":
 
     parser.add_option("-v", "--virtual_intron", dest="virtual_intron", default = False,
                  help="whether to use virtual intron to capture alternative first and last exon usage")
-   
+    
+    parser.add_option("--single_cell", dest="single_cell", default = True,
+                 help="whether to built matrices for isoform to intron and exon, require if dealing with\
+                     single cell data from alevin-fry")
+    
+    
     (options, args) = parser.parse_args()
 
 
