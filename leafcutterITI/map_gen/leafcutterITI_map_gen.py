@@ -585,7 +585,7 @@ if __name__ == "__main__":
                  help="whether to use virtual intron to capture alternative first and last exon usage")
     
     parser.add_option("--single_cell", dest="single_cell", default = True,
-                 help="whether to built matrices for isoform to intron and exon, require if dealing with\
+                 help="whether to build matrices for isoform to intron and exon, required if dealing with\
                      single cell data from alevin-fry")
     
     
