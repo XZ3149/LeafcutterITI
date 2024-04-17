@@ -65,7 +65,7 @@ Optional Parameters:
                         AFE and ALE usage, a testing feature (default: None)
 
 --single_cell           Whether to build matrices for isoform to intron and exon, required if dealing with\
-                        single cell data from alevin-fry
+                        single cell data from alevin-fry (default: True)
 ```
 
 
