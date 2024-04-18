@@ -38,10 +38,10 @@ There are two parts of LeafcutterITI:
 ### LeafcutterITI_map_gen
 ```
 usage: python leafcutterITI_map_gen.py [-a/--annot] [--annot_source] [-o/--outprefix] 
-                     [--maxintronlen] [--minintronlen] [-v/--virtual_intron]
+                     [--maxintronlen] [--minintronlen] [-v/--virtual_intron] [--single_cell]
 or when install with pip
-leafcutterITI-map [-a/--annot] [--annot_source] [-o/--outprefix] 
-                     [--maxintronlen] [--minintronlen] [-v/--virtual_intron]
+leafcutterITI-map [-a/--annot] [--annot_source] [-o/--outprefix] [--maxintronlen]
+                      [--minintronlen] [-v/--virtual_intron] [--single_cell]
 
 
 Mandatory parameters:
@@ -64,7 +64,10 @@ Optional Parameters:
 -v, --virtual_intron    Whether to compute virtual intron that can be used to capture
                         AFE and ALE usage, a testing feature (default: None)
 
+--single_cell           Whether to build matrices for isoform to intron and exon, required if dealing with\
+                        single cell data from alevin-fry (default: True)
 ```
+
 
 ### LeafcutterITI_clustering
 
@@ -144,7 +147,12 @@ if annotation_source='gencode', an additional file will be generated to give out
 
 This is a testing feature that haven't been tested yet
   
-A record file that contain the parameters will also be generated
+A record file that contains the parameters will also be generated
+
+When --single_cell == True, five additional files will be generated. Two for sparse matrices in npz format, rows are isoforms, and columns are introns or exons. Three txt files record the row and column names.
+
+
+
 
 ### Step 2: Salmon isoform quantification
 
