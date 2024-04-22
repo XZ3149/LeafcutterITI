@@ -597,22 +597,22 @@ if __name__ == "__main__":
         sys.exit("Error: no annotation file provided...\n")
 
 
-    sys.stderr.write(f"Start Processing transcriptome annotation {options.annot}")
-    sys.stderr.write(f"annot source: {options.annot_source}")
-    sys.stderr.write(f"outprefix: {options.outprefix}")
-    sys.stderr.write(f"Max intron length: {options.maxintronlen}")
-    sys.stderr.write(f"Min intron length: {options.minintronlen}")
-    sys.stderr.write(f"remove pseudogene and decay transcript: {options.quality_control}")
-    sys.stderr.write(f"virtual intron: {options.virtual_intron}")
+    sys.stderr.write(f"Start Processing transcriptome annotation {options.annot}\n")
+    sys.stderr.write(f"annot source: {options.annot_source}\n")
+    sys.stderr.write(f"outprefix: {options.outprefix}\n")
+    sys.stderr.write(f"Max intron length: {options.maxintronlen}\n")
+    sys.stderr.write(f"Min intron length: {options.minintronlen}\n")
+    sys.stderr.write(f"remove pseudogene and decay transcript: {options.quality_control}\n")
+    sys.stderr.write(f"virtual intron: {options.virtual_intron}\n")
     
     record = f'{options.outprefix}map_parameters.txt'
-    sys.stderr.write(f'saving record to {record}')
+    sys.stderr.write(f'saving record to {record} \n')
     
     write_options_to_file(options, record)
 
     LeafcutterITI_map_generation(options)
     
-    sys.stderr.write('Finish building Isofrom to intron map')
+    sys.stderr.write('Finish building Isofrom to intron map \n')
 
 
 
