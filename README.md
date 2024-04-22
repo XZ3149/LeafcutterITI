@@ -113,6 +113,63 @@ Optional Parameters:
 ```
 
 
+### LeafcutterITI_scITI
+
+```
+usage: python leafcutterITI_scITI.py [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
+                          [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
+                          [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                          [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
+
+or when install with pip
+leafcutterITI_scITI [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
+                          [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
+                          [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                          [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
+
+Mandatory parameters:
+
+--alevin_dir            The directory for alevin results, the file should contain the eq matrix and other files
+
+--salmon_ref            The reference used for salmon index, The salmon reference,  maybe spliceu or splicei
+
+--ref_dir               Isoform to intron map file 
+
+--barcodes_cluster      
+
+--pseudobulk_samples
+
+
+
+--map             The isoforms to introns map generated from leafcutterITI_map_gen  
+
+--count_files     A txt file that contain the sample names 
+
+--connect_file    The intron-exon connectivity file generated from leafcutterITI_map_gen 
+
+-a, --annot       The transcriptome annotation gtf file 
+
+
+Optional Parameters:
+--cluster_def           The definition used for cluster refinement, three def available, 1: overlap, 2: overlap+share_intron_splice_site, 
+                        3: overlap+share_intron_splice_site+shared_exon_splice_site (default: 3)
+
+-o, --outprefix         The prefix for output files (default: Leafcutter_)
+
+-n, --normalization     whether to performance normalization, if not use TPM directly (default: True)
+
+--preprocessed          whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
+                        perform normalization again (default: False) 
+
+--samplecutoff          minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
+
+--introncutoff          minimum Normalized count/TPM for an intron to count as exist(default 5)
+
+--m, --minclucounts     minimum Normalized count/TPM to support a cluster (default: 30)
+
+-r, --mincluratio       minimum fraction of reads in a cluster that supports an intron (default 0.01)
+
+```
 
 ## Detailed Tutorial to run the LeafcutterITI
 
