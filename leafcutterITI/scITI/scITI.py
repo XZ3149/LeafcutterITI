@@ -45,7 +45,7 @@ def metacell_generation(type_dic, n, out_prefix = ''):
     n: number of cell merge to a metacell
     out_prefix: the prefix of the output file
     """
-    
+    n = int(n)
     metacell_dic = {}
     with open(f'{out_prefix}meta_cells_record.txt', 'w') as output, open(f'{out_prefix}meta_group.txt', 'w') as group_file:
         print('type/cluster num', file=output)
@@ -71,6 +71,7 @@ def bootstrapping(type_dic, n, k, out_prefix = ''):
     k: round of bootstrapping for each cell type or cluster
     out_prefix: the prefix of the output file
     """
+    n = int(n)
     bootstrap_dic = {}
     with open(f'{out_prefix}bootstrapping_record.txt', 'w') as output, open(f'{out_prefix}bootstrapping_group.txt', 'w') as group_file:
         print('type/cluster num', file=output)
@@ -335,7 +336,7 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
             file.write(f"{pseudo} {count}\n")
 
 
-    sys.stderr.write(f"There are {len(filter_out_index_list)} barcodes get eliminated")
+    sys.stderr.write(f"There are {len(filter_out_index_list)} barcodes get eliminated \n")
     
     return  filtered_df
 
@@ -358,10 +359,12 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
 
     
     # step 1: data loading
-    transcript_lengths_dic = calcutta_functions.get_transcript_lengths(salmon_ref)    
+    transcript_lengths_dic = calcutta_functions.get_transcript_lengths(Path(salmon_ref))    
+    
+    
     
     barcodes_pseudo = pd.read_csv(barcode_pseudo_file, header = None, sep = ',', index_col =0,  names = ['sample'])
-    
+    alevin_dir = Path(alevin_dir)
     
     map_cache = alevin_dir / "gene_eqclass.npz"
     if map_cache.is_file(): 
@@ -378,10 +381,11 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
 
     if npz_cache.is_file(): 
         cell_ec_sparse = scipy.sparse.load_npz(npz_cache)
+
     else:
         cell_ec_sparse = scipy.io.mmread(alevin_dir / "geqc_counts.mtx") 
         scipy.sparse.save_npz(npz_cache, cell_ec_sparse)  
-        cell_ec_sparse = cell_ec_sparse.tocsr()  # convert coo to csr format, necessary for row operation
+    cell_ec_sparse = cell_ec_sparse.tocsr()  # convert coo to csr format, necessary for row operation
     
     
     with open(alevin_dir / "quants_mat_cols.txt", 'r') as file:
@@ -571,7 +575,6 @@ def sc_intron_count(reference_directory, pseudo_matrix_file, pseudo_cols_file, p
 
 
     common_isoforms = set(isoform_rows).intersection(pseudo_cols) # get the common isoforoms
-    print(len(common_isoforms))
 
     # get the index for the isoforms 
     reference_index = {isoform: idx for idx, isoform in enumerate(isoform_rows)}
@@ -669,11 +672,11 @@ def LeafcutterITI_scITI(options):
         else:
             pseudobulk_name = f'{out_prefix}bootstrapping_barcodes_to_pseudobulk.txt'
             
-        sys.stderr.write("Barcodes to Pseudobulk samples generated\n")
+        sys.stderr.write("Barcodes to pseudobulk samples generated\n")
 
     else:
         pseudobulk_name = options.pseudobulk_samples 
-        sys.stderr.write("Barcodes to Pseudobulk samples read in\n")
+        sys.stderr.write("Barcodes to pseudobulk samples read in\n")
     
 
 
@@ -696,7 +699,8 @@ def LeafcutterITI_scITI(options):
 
     pseudo_cols_file = f'{out_prefix}pseudo_spliced_cols.txt'
     pseudo_rows_file = f'{out_prefix}pseudo_rows.txt'
-    sc_intron_count(options.ref_dir, pseudo_matrix_file,pseudo_cols_file, pseudo_rows_file, in_prefix = options.ref_prefix ,\
+
+    sc_intron_count(options.ref_dir, pseudo_matrix_file,pseudo_cols_file, pseudo_rows_file,  in_prefix= options.ref_prefix ,\
                     out_prefix = out_prefix, threshold = options.introncutoff)
     sys.stderr.write("Intron and exon were quantified\n")
     # a csv file that is compatible with the rest of leafcutterITI is obtained
@@ -749,30 +753,18 @@ if __name__ == "__main__":
     parser = OptionParser()
 
 
-    parser.add_option("--map_directory", dest="map_directory", default = None,
-                  help="the directory of isoform to intron and exon matrices (default: None)")
     
-    parser.add_option("--input_prefix", dest="input_prefix", default = '',
-                  help="isoform to intron map file (default: None)")
-    
-    
+    # necessary parameter
     parser.add_option("--alevin_dir", dest="alevin_dir", default = None,
                   help="The directory for alevin results, should contain the eq matrix and other files (default: None)")
     
     
-    parser.add_option("--salmon_ref", dest="salmon_dir", default = None,
-                  help="the salmon reference,  be spliceu or splicei (default: None)")
+    parser.add_option("--salmon_ref", dest="salmon_ref", default = None,
+                  help="The reference used for salmon index, The salmon reference,  maybe spliceu or splicei (default: None)")
 
-    
-    parser.add_option("-n",'--num_cell', dest="num_cell", default = 100,
-                  help="the number of cell/barcode that would like to include in a pseudobulk sample, cluster/cell type that have fewer cell than\
-                      this number will not included in the computation (default: 100)")
-    
-    parser.add_option("-k",'--num_bootstrapping', dest="num_bootstrapping", default = 30,
-                  help="the number of bootstrapping samples generated for each cluster/cell type (default: 30)")
+    parser.add_option("--ref_dir", dest="ref_dir", default = None,
+                  help="leafcutterITI reference direcotry (default: None)")
 
-    parser.add_option('--group_method', dest="group_method", default = 'metacells',
-                  help="the pseudobulk sample generate method, could be metacell or bootstrapping (default: metacells)")
     parser.add_option("--barcodes_cluster", dest="barcodes_cluster", default = None,
                   help="the file that record which barcodes is belonging to which cluster/cell type in format 'barcode,cluster' \
                   this file will be used to generate pseudobulk samples (default: None)")
@@ -781,28 +773,40 @@ if __name__ == "__main__":
                       help="a txt file with barcodes to pseudobulk sample are expected in format 'barcode pseudobulk_ample', if \
                       this option!= None, then it will overwrite the input to --barcodes_cluster, and use the file in this option \
                       for computation (default: None)")
+                      
+    parser.add_option("--ref_prefix", dest="ref_prefix", default = '',
+               help="the reference prefix that is used to generate isoform to intron map using\
+               leacutterITI_map_gen (default: '')")            
+               
 
 
+
+    # optional parameter
+
+
+    parser.add_option("-n",'--num_cell', dest="num_cell", default = 100,
+                  help="the number of cell/barcode that would like to include in a pseudobulk sample, cluster/cell type that have fewer cell than\
+                      this number will not included in the computation (default: 100)")
+    
+    parser.add_option("-k",'--num_bootstrapping', dest="num_bootstrapping", default = 30,
+                  help="the number of bootstrapping samples generated for each cluster/cell type (default: 30)")
     parser.add_option("--min_eq", dest="min_eq", default = 5,
                   help="minimum count for each eq class for it to be included in the EM (default: 5)")
 
 
-    parser.add_option("--ref_dir", dest="ref_dir", default = None,
-                  help="isoform to intron map file (default: None)")
-    
-    parser.add_option("--ref_prefix", dest="ref_prefix", default = '',
-               help="the reference prefix that is used to generate isoform to intron map using\
-               leacutterITI_map_gen (default: '')")
+    parser.add_option('--group_method', dest="group_method", default = 'metacells',
+                  help="the pseudobulk sample generate method, could be metacell or bootstrapping (default: metacells)")
+
+               
     parser.add_option("--normalization", dest="normalization", default = True,
                   help="whether to performance normalization, if not use TPM directly (default: True)")
-
-
-
+    
+    parser.add_option("--preprocessed", dest="preprocessed", default = False,
+                  help="Whether pseudobulk generation and EM were done, if true, \
+                      then the pipeline start from counting intron (default: False)")
 
     parser.add_option("-v","--with_virtual", dest="with_virtual", default = False,
                   help=" whehter the map contain virtual intron to capture AFE and ALE(default: False)")
-    
-    
     
     
     parser.add_option("--cluster_def", dest="cluster_def", default = 3,
@@ -832,6 +836,18 @@ if __name__ == "__main__":
 
 
 
+    if options.salmon_ref is None:
+        sys.exit("Error: no salmon reference is provided...\n")
+    
+    if options.ref_dir is None:
+        sys.exit("Error: no leafcutterITI reference is provided...\n")
+    
+        
+    """
+    if map_cache.is_file() == None: 
+        ec_transcript_mat = scipy.sparse.load_npz(map_cache)
+
+
     if options.count_files is None:
         sys.exit("Error: no count_files files provided...\n")
         
@@ -844,7 +860,7 @@ if __name__ == "__main__":
 
     if options.normalization == True and options.annot == None:
         sys.exit("Error: no annotation file provided, this is required if normalization == True...\n")      
-
+    """
    
 
     LeafcutterITI_scITI(options)
