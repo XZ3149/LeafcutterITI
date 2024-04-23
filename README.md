@@ -133,33 +133,38 @@ Mandatory parameters:
 
 --salmon_ref            The reference used for salmon index, The salmon reference,  maybe spliceu or splicei
 
---ref_dir               Isoform to intron map file 
+--ref_dir               leafcutterITI reference directory, which should contain the matrices for isoform to intron and exon
 
---barcodes_cluster      
+--barcodes_cluster      The file that records which barcodes belong to which cluster/cell type in the format 'barcode,cluster' 
+                        this file will be used to generate pseudobulk samples 
 
---pseudobulk_samples
-
-
-
---map             The isoforms to introns map generated from leafcutterITI_map_gen  
-
---count_files     A txt file that contain the sample names 
-
---connect_file    The intron-exon connectivity file generated from leafcutterITI_map_gen 
-
--a, --annot       The transcriptome annotation gtf file 
-
+--pseudobulk_samples    a txt file with barcodes to pseudobulk sample are expected in format 'barcode pseudobulk_ample', if \
+                        this option != None, then it will overwrite the input to --barcodes_cluster, and use the file in this option \
+                        for computation. Only one of barcodes_cluster or pseudobulk_samples is required
 
 Optional Parameters:
+--ref_prefix            The prefix that is used to generate isoform to intron map using
+                        leacutterITI_map_gen (default: '')
+
+--n,--num_cell          The number of cell/barcode that you would like to include in a pseudobulk sample, cluster/cell type that has fewer
+                        cell/barcodes than this number will not included in the computation (default: 100)
+
+-k,--num_bootstrapping  the number of bootstrapping samples generated for each cluster/cell type if using bootstrapping to generate pseudobulk sample (default: 30)
+
+--min_eq                minimum count for each eq class for it to be included in the EM (default: 5)
+
+--pseudo_method         the pseudobulk sample generate method, could be metacells or bootstrapping (default: metacells)
+
 --cluster_def           The definition used for cluster refinement, three def available, 1: overlap, 2: overlap+share_intron_splice_site, 
                         3: overlap+share_intron_splice_site+shared_exon_splice_site (default: 3)
 
 -o, --outprefix         The prefix for output files (default: Leafcutter_)
 
--n, --normalization     whether to performance normalization, if not use TPM directly (default: True)
+--normalization         whether to used normalized counts, if not use TPM directly (default: True)
 
---preprocessed          whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
-                        perform normalization again (default: False) 
+--preprocessed          Whether pseudobulk generation and EM were done, if true, then the pipeline starts from counting intron (default: False)
+
+-v,--with_virtual       Whether the map that contain virtual intron to capture AFE and ALE(default: False)
 
 --samplecutoff          minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
 
