@@ -1,3 +1,4 @@
 [console_scripts]
 leafcutterITI-cluster = leafcutterITI.__main__:leafcutterITI_clustering
 leafcutterITI-map = leafcutterITI.__main__:leafcutterITI_map_gen
+leafcutterITI-scITI = leafcutterITI.__main__:leafcutterITI_scITI

@@ -4,6 +4,8 @@ pyproject.toml
 setup.py
 leafcutterITI/__init__.py
 leafcutterITI/__main__.py
+leafcutterITI/calcutta_functions.py
+leafcutterITI/shared_functions.py
 leafcutterITI/utils.py
 leafcutterITI.egg-info/PKG-INFO
 leafcutterITI.egg-info/SOURCES.txt
@@ -16,3 +18,6 @@ leafcutterITI/clustering/leafcutterITI_clustering.py
 leafcutterITI/clustering/utils.py
 leafcutterITI/map_gen/__init__.py
 leafcutterITI/map_gen/leafcutterITI_map_gen.py
+leafcutterITI/scITI/__init__.py
+leafcutterITI/scITI/calcutta_functions.py
+leafcutterITI/scITI/leafcutterITI_scITI.py

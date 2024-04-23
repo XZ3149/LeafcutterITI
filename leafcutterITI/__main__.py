@@ -8,5 +8,10 @@ def leafcutterITI_clustering():
     run_path(str(script_pth), run_name="__main__")
     
 def leafcutterITI_map_gen():
-    script_pth = pkg_dir / "map_gen" / "LeafcutterITI_map_gen.py"
+    script_pth = pkg_dir / "map_gen" / "leafcutterITI_map_gen.py"
+    run_path(str(script_pth), run_name="__main__")
+    
+    
+def leafcutterITI_scITI():
+    script_pth = pkg_dir / "scITI" / "leafcutterITI_scITI.py"
     run_path(str(script_pth), run_name="__main__")
