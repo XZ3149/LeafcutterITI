@@ -26,7 +26,7 @@
 #### Other dependencies for Leafcutter as listed in https://github.com/davidaknowles/leafcutter/tree/master, especially for Leafcutter_ds
 
 ## LeafcutterITI
-A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. Can also be install as a command line tool with pip install leafcutterITI
+A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. Can also be install as a command line tool with `pip install leafcutterITI`
 
 ![LeafcutterITI_Workflow](figures/LeafcutterITI_workflow.png)
 
@@ -155,7 +155,7 @@ Optional Parameters:
 
 --min_eq                minimum count for each eq class for it to be included in the EM (default: 5)
 
---pseudo_method         the pseudobulk sample generate method, could be metacells or bootstrapping (default: metacells)
+--pseudobulk_method     the pseudobulk sample generate method, could be metacells or bootstrapping (default: metacells)
 
 --cluster_def           The definition used for cluster refinement, three def available, 1: overlap, 2: overlap+share_intron_splice_site, 
                         3: overlap+share_intron_splice_site+shared_exon_splice_site (default: 3)
