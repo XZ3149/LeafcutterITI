@@ -121,10 +121,10 @@ def pseudo_group_generation(barcodes_type_file, n, k = 30, group_method = 'metac
 
 
     if group_method == 'metacells':
-        merged_dic = metacell_generation(type_dic, n)
+        merged_dic = metacell_generation(type_dic, n, out_prefix)
         barcode_group_print(merged_dic, f'{out_prefix}meta_')
     else: 
-        merged_dic = bootstrapping(type_dic, n, k)
+        merged_dic = bootstrapping(type_dic, n, k, out_prefix)
         barcode_group_print(merged_dic, f'{out_prefix}bootstrapping_')
 
 
@@ -333,7 +333,40 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
 
 
 
-def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5, min_transcript = 0, out_prefix= ''):
+def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w):
+    """
+    This is the helper function for pseudo_eq_conversion, this function will be use 
+
+    """
+    temp_sample = cell_ec_sparse_pseudo_filt.getrow(i).toarray().ravel()
+    total_count = temp_sample.sum()
+    temp_sample += 0.0000001  # add 1e-6 to avoid null value
+    
+    alpha = calcutta_functions.EM(temp_sample, ec_transcript_input, w)
+    TPM = alpha * 1000000
+    count = (alpha * total_count)  # TPM to count conversion
+    # we don't need the actual count, we just need a scale that represent the support level of the TPM value
+    # TPM * total_count will give a count-like value that retain the TPM ratio of transcripts
+
+    """
+    count /= w
+    count = (count / count.sum()) * total_count
+    """
+    
+    return TPM, count
+
+
+
+
+
+
+
+
+
+
+
+
+def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5, min_transcript = 0, out_prefix= '', threshold = 0.1):
     """
     
 
@@ -348,7 +381,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
 
     """
 
-    
+    threshold = float(threshold) # ensure the threshold is a float number
     # step 1: data loading
     transcript_lengths_dic = calcutta_functions.get_transcript_lengths(Path(salmon_ref))    
     
@@ -457,7 +490,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
         alpha = calcutta_functions.EM(temp_sample, ec_transcript_input, w)
         TPM = alpha * 1000000
         count = alpha * total_count 
-        # we don't need the actual count, we just need a scale that represent the support levsd   el of the TPM value
+        # we don't need the actual count, we just need a scale that represent the support level of the TPM value
         # TPM * total_count will give a count-like value that retain the TPM ratio of transcripts
     
         """
@@ -467,6 +500,15 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
         
         pseudo_TPM = vstack([pseudo_TPM, TPM])
         pseudo_count = vstack([pseudo_count, count])
+
+    # this will ensure that the extremly small value won't be detected in the final result
+    pseudo_TPM.data[pseudo_TPM.data < 0.1] = 0 
+    pseudo_TPM.eliminate_zeros()
+    
+    pseudo_count.data[pseudo_count.data < 0.1] = 0 
+    pseudo_count.eliminate_zeros()
+    
+    
 
     # step 6: store matrices and eliminate unspliced isoform as they doesn't excised intron    
     pseudo_names = row_names
@@ -489,6 +531,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
         for trans in spliced_feature:
             print(trans, file=output)
             
+    
     
 
     save_npz(f'{out_prefix}pseudo_TPM.npz', pseudo_TPM)
@@ -675,7 +718,8 @@ def LeafcutterITI_scITI(options):
         # step 2: compute the pseudobulk isoform matrix 
     
     
-        pseudo_eq_conversion(options.alevin_dir, options.salmon_ref, pseudobulk_name, min_EC = options.min_eq, min_transcript = 0, out_prefix= out_prefix)
+        pseudo_eq_conversion(options.alevin_dir, options.salmon_ref, pseudobulk_name, min_EC = options.min_eq, min_transcript = 0, \
+                             out_prefix= out_prefix, threshold= options.samplecutoff)
     
         sys.stderr.write("pseudobulk eq matrix were computed\n")
     
@@ -803,13 +847,13 @@ if __name__ == "__main__":
                   help="output prefix , should include the diretory address if not\
                   in the same dic (default leafcutterITI_)")    
 
-    parser.add_option("--samplecutoff", dest="samplecutoff", default = 0,
-                  help="minimum count for an intron in a sample to count as exist(default: 0)")
+    parser.add_option("--samplecutoff", dest="samplecutoff", default = 0.1,
+                  help="minimum count for an isoform in a sample to count as exist(default: 0.1)")
 
-    parser.add_option("--introncutoff", dest="introncutoff", default = 5,
+    parser.add_option("--introncutoff", dest="introncutoff", default = 80,
                   help="minimum count for an intron to count as exist(default 5)")
     
-    parser.add_option("-m", "--minclucounts", dest="minclucounts", default = 30,
+    parser.add_option("-m", "--minclucounts", dest="minclucounts", default = 100,
                   help="minimum count in a cluster (default 30 normalized count)")
     
     parser.add_option("-r", "--mincluratio", dest="mincluratio", default = 0.01,
