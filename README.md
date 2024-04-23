@@ -232,7 +232,8 @@ For single-cell data, after pseudoaligment, we will need to process the data and
 There are different single-cell analysis tool can achieve this goal. For examples, Seurat and Scanpy. Any analysis tool could work as long as the barcodes to clusters/cell_types csv file is provided. 
 For our analysis, we used Scanpy and tutorial for cell clustering with Scanpy could be found at https://scanpy.readthedocs.io/en/stable/tutorials/basics/clustering.html. 
 After the clustering and cell labeling, the barcodes to clusters/cell_types could be export like 
-`adata.obs[['cell_barcodes', 'cluster_name']]`
+`adata.obs[['cell_barcodes', 'cluster_name']].to_csv('barcode_to_cluster.csv', index = False, header = None)` 
+
 
 
 ### Step 3.1: LeafcutterITI clustering for bulk or pseudobulk data
@@ -267,7 +268,7 @@ These two files are equivalent to Leafcutter clustering numers.counts.gz and cou
 
 ### Step 3.2: LeafcutterITI clustering for single-cell data
 
-For this step, we assume the data we are processing are single-cell data.
+For this step, we assume the data we are processing are single-cell data. Results from Step 2 and Step 2.1 were obtained. 
 
 
 
