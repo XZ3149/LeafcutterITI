@@ -17,6 +17,7 @@
 - numpy 
 - pandas
 - pyranges
+- scipy
 
 #### Additional Requirement for isoform quantification
 
