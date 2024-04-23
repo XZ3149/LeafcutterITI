@@ -17,6 +17,7 @@
 - numpy 
 - pandas
 - pyranges
+- scipy
 
 #### Additional Requirement for isoform quantification
 
@@ -31,9 +32,10 @@ A modified version of Leafcutter that detects and analyzes alternative splicing 
 
 
 
-There are two parts of LeafcutterITI: 
+There are three parts of LeafcutterITI: 
 - LeafcutterITI_map_gen
-- LeafcutterITI_clustering
+- LeafcutterITI_clustering (for bulk & pseudobulk)
+- LeafcutterITI_scITI (for single-cell)
 
 ### LeafcutterITI_map_gen
 ```
@@ -133,33 +135,38 @@ Mandatory parameters:
 
 --salmon_ref            The reference used for salmon index, The salmon reference,  maybe spliceu or splicei
 
---ref_dir               Isoform to intron map file 
+--ref_dir               leafcutterITI reference directory, which should contain the matrices for isoform to intron and exon
 
---barcodes_cluster      
+--barcodes_cluster      The file that records which barcodes belong to which cluster/cell type in the format 'barcode,cluster' 
+                        this file will be used to generate pseudobulk samples 
 
---pseudobulk_samples
-
-
-
---map             The isoforms to introns map generated from leafcutterITI_map_gen  
-
---count_files     A txt file that contain the sample names 
-
---connect_file    The intron-exon connectivity file generated from leafcutterITI_map_gen 
-
--a, --annot       The transcriptome annotation gtf file 
-
+--pseudobulk_samples    a txt file with barcodes to pseudobulk sample are expected in format 'barcode pseudobulk_ample', if \
+                        this option != None, then it will overwrite the input to --barcodes_cluster, and use the file in this option \
+                        for computation. Only one of barcodes_cluster or pseudobulk_samples is required
 
 Optional Parameters:
+--ref_prefix            The prefix that is used to generate isoform to intron map using
+                        leacutterITI_map_gen (default: '')
+
+--n,--num_cell          The number of cell/barcode that you would like to include in a pseudobulk sample, cluster/cell type that has fewer
+                        cell/barcodes than this number will not included in the computation (default: 100)
+
+-k,--num_bootstrapping  the number of bootstrapping samples generated for each cluster/cell type if using bootstrapping to generate pseudobulk sample (default: 30)
+
+--min_eq                minimum count for each eq class for it to be included in the EM (default: 5)
+
+--pseudo_method         the pseudobulk sample generate method, could be metacells or bootstrapping (default: metacells)
+
 --cluster_def           The definition used for cluster refinement, three def available, 1: overlap, 2: overlap+share_intron_splice_site, 
                         3: overlap+share_intron_splice_site+shared_exon_splice_site (default: 3)
 
--o, --outprefix         The prefix for output files (default: Leafcutter_)
+-o, --outprefix         The prefix for output files (default: leafcutter_)
 
--n, --normalization     whether to performance normalization, if not use TPM directly (default: True)
+--normalization         whether to used normalized counts, if not use TPM directly (default: True)
 
---preprocessed          whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
-                        perform normalization again (default: False) 
+--preprocessed          Whether pseudobulk generation and EM were done, if true, then the pipeline starts from counting intron (default: False)
+
+-v,--with_virtual       Whether the map that contain virtual intron to capture AFE and ALE(default: False)
 
 --samplecutoff          minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
 
@@ -213,14 +220,26 @@ When --single_cell == True, five additional files will be generated. Two for spa
 
 ### Step 2: Salmon isoform quantification
 
-For usage of Salmon please refer https://salmon.readthedocs.io/en/latest/salmon.html
+LeafcutterITI utlized pseudoalignment method Salmon for bulk and preprocessed pseudobulk data. For usage of Salmon please refer https://salmon.readthedocs.io/en/latest/salmon.html
 
-In the rest of the tutorial, we assume RNA-seq data were aligned to the transcriptome using Salmon. Then we will obtain file ending with .sf that described the isoform quantification results.
+For single-cell data, leafcutterITI utilized alevin-fry pipeline form Salmon. The usage of alevin-fry please refer https://alevin-fry.readthedocs.io/en/latest/. 
+Specific notices, please use -d, --dump-eqclasses flag when using alevin-fry quant to obtain the eqclass matrix
+
+In the rest of the tutorial, we assume RNA-seq data were aligned to the transcriptome using Salmon or with Alevin-fry. Then we will obtain file ending with .sf that described the isoform quantification results.
+
+### Step 2.1: Single-cell clustering after alevin-fry
+
+For single-cell data, after pseudoaligment, we will need to process the data and obtain a barcodes to clusters/cell_types csv file that have row in format 'barcode,cluster/cell_type'. 
+There are different single-cell analysis tool can achieve this goal. For examples, Seurat and Scanpy. Any analysis tool could work as long as the barcodes to clusters/cell_types csv file is provided. 
+For our analysis, we used Scanpy and tutorial for cell clustering with Scanpy could be found at https://scanpy.readthedocs.io/en/stable/tutorials/basics/clustering.html. 
+After the clustering and cell labeling, the barcodes to clusters/cell_types could be export like 
+`adata.obs[['cell_barcodes', 'cluster_name']].to_csv('barcode_to_cluster.csv', index = False, header = None)` 
 
 
-### Step 3: LeafcutterITI clustering
 
-For this step, we will need the file generated from step 1, the file path and the name for the isoform quantification files generated by Salmon, and the transcriptome annotation
+### Step 3.1: LeafcutterITI clustering for bulk or pseudobulk data
+
+For this step, we assume the data we are processing are bulk or pseudobulk data, we will need the file generated from step 1, the file path and the name for the isoform quantification files generated by Salmon, and the transcriptome annotation
 
 
 Sample run:
@@ -245,6 +264,15 @@ chr1:668593:672093:clu_2 11 16 23 2.5 3 20 9
 ```
 
 These two files are equivalent to Leafcutter clustering numers.counts.gz and counts.gz. It is worth noticing that the normalized count or TPM is not necessarily an integer, but the normalized count will exhibit a count-like property.
+
+
+
+### Step 3.2: LeafcutterITI clustering for single-cell data
+
+For this step, we assume the data we are processing are single-cell data. Results from Step 2 and Step 2.1 were obtained. 
+
+
+
 
 
 
