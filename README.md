@@ -120,13 +120,13 @@ Optional Parameters:
 ```
 usage: python leafcutterITI_scITI.py [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
                           [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
-                          [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                          [--thread] [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff] 
                           [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
 
 or when install with pip
 leafcutterITI_scITI [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
                           [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
-                          [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                          [--thread] [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff] 
                           [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
 
 Mandatory parameters:
@@ -162,7 +162,9 @@ Optional Parameters:
 
 -o, --outprefix         The prefix for output files (default: leafcutter_)
 
---normalization         whether to used normalized counts, if not use TPM directly (default: True)
+--thread                The number of threads used for parallel computation, should not be too large to avoid crash
+
+--normalization         Whether to use normalized counts. If not, use TPM directly (default: True)
 
 --preprocessed          Whether pseudobulk generation and EM were done, if true, then the pipeline starts from counting intron (default: False)
 
