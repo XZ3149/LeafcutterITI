@@ -277,12 +277,9 @@ Other parameters are optional.
 
 Sample run:
 ```
-LeafcutterITI-scITI --alevin_dir salmon/out_permit_know/quant_spliceu_t2t [--salmon_ref] [--ref_dir leafcutterITI map]
-                      [--barcodes_cluster] [--pseudobulk_samples]
-
-
---map transcript_intron_map.tsv --count_files quantification_files.txt --connect_file intron_exon_connectivity.tsv -a gencode.v45.annotation.gtf --cluster_def 3 \
-                                --normalization True -o sample_run_ --minclucounts 30 --mincluratio 0.01
+LeafcutterITI-scITI --alevin_dir salmon/out_permit_know/quant_spliceu_t2t --salmon_ref salmon_index/spliceu.fa --ref_dir leafcutterITI_map_dir
+                    --barcodes_cluster barcodes_clusters.txt  --cluster_def 3 --normalization True --preprocessed False -o sample_run_
+                    --minclucounts 30 --mincluratio 0.01 -n 100
 ```
 
 Similar to leacutterITI-clustering, two main output files will be obtained:
