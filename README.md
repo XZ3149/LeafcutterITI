@@ -252,8 +252,8 @@ python LeafcutterITI_clustering --map transcript_intron_map.tsv --count_files qu
 
 
 Two main output files will be obtained:
-- {out_prefix}refined_cluster
-- {output_prefix}ratio_count
+- {outprefix}refined_cluster
+- {outprefix}ratio_count
 
 sample {out_prefix}refined_cluster
 ```
@@ -286,8 +286,8 @@ LeafcutterITI-scITI --alevin_dir salmon/out_permit_know/quant_spliceu_t2t [--sal
 ```
 
 Similar to leacutterITI-clustering, two main output files will be obtained:
-- {out_prefix}refined_cluster
-- {output_prefix}ratio_count
+- {outprefix}refined_cluster
+- {outprefix}ratio_count
 
 This step will also generate other relevant files like `barcodes_pseudobulk.txt` that record each step of the computation.
 
