@@ -8,13 +8,18 @@ from scipy.sparse import csr_matrix, save_npz, load_npz, vstack
 from optparse import OptionParser
 import random
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
+import os
 warnings.simplefilter(action='ignore', category=pd.errors.DtypeWarning)
 
-
+import re
 import leafcutterITI.utils
 from leafcutterITI.utils import timing_decorator,write_options_to_file
 from leafcutterITI.scITI import calcutta_functions
 from leafcutterITI.shared_functions import build_init_cluster, process_clusters, compute_ratio
+
+from joblib import Parallel, delayed
+
 
 """
 # for local test
@@ -132,126 +137,6 @@ def pseudo_group_generation(barcodes_type_file, n, k = 30, group_method = 'metac
 
 
 
-@timing_decorator
-def isoform_intron_sparse_generation(isoform_intron_map_file, out_prefix = ''):
-    """
-    
-
-    Returns
-    -------
-    None.
-
-    """
-
-
-    df = pd.read_csv(isoform_intron_map_file, sep = ' ')
-
-
-    isoform_to_introns = dict(zip(df['Transcript'], df['support_introns']))
-    isoform_to_exons = dict(zip(df['Transcript'], df['support_exons']))
-
-
-
-    for isoform, introns in isoform_to_introns.items():
-    # Check if introns is not NaN (using pandas isna() function)
-        if pd.isna(introns):
-            isoform_to_introns[isoform] = []
-        else:
-            isoform_to_introns[isoform] = introns.split(',')
-
-
-    for isoform, exons in isoform_to_exons.items():
-    # Check if introns is not NaN (using pandas isna() function)
-        if pd.isna(exons):
-            isoform_to_exons[isoform] = []
-        else:
-            isoform_to_exons[isoform] = exons.split(',')
-
-
-
-    # Step 1: Extract unique isoforms and introns
-    all_isoforms = list(isoform_to_introns.keys())
-    
-    all_introns = set()
-    for introns in isoform_to_introns.values():
-        all_introns.update(introns)
-    all_introns = list(all_introns)    
-    
-    all_exons = set()
-    for exons in isoform_to_exons.values():
-        all_exons.update(exons)
-    all_exons = list(all_exons)
-
-
-
-    # Step 2: Create mappings to indices
-    isoform_to_index = {isoform: i for i, isoform in enumerate(all_isoforms)}
-    intron_to_index = {intron: i for i, intron in enumerate(all_introns)}
-    exon_to_index = {exon: i for i, exon in enumerate(all_exons)}
-
-
-
-
-    # Step 3: Populate the matrix
-    row_indices = []
-    col_indices = []
-    for isoform, introns in isoform_to_introns.items():
-        row_index = isoform_to_index[isoform]
-        for intron in introns:
-            col_index = intron_to_index[intron]
-            row_indices.append(row_index)
-            col_indices.append(col_index)
-
-    num_rows = len(all_isoforms)
-    num_intron_cols = len(all_introns)
-
-
-    isoform_intron_matrix = scipy.sparse.coo_matrix(
-        ( [1]*len(row_indices), (row_indices, col_indices) ),
-        shape=(num_rows, num_intron_cols)
-        )
-
-
-    row_indices = []
-    col_indices = []
-    for isoform, exons in isoform_to_exons.items():
-        row_index = isoform_to_index[isoform]
-        for exon in exons:
-            col_index = exon_to_index[exon]
-            row_indices.append(row_index)
-            col_indices.append(col_index)
-
-    num_exon_cols = len(all_exons)
-    
-    isoform_exon_matrix = scipy.sparse.coo_matrix(
-        ( [1]*len(row_indices), (row_indices, col_indices) ),
-        shape=(num_rows, num_exon_cols)
-        )
-
-
-
-
-    save_npz(f'{out_prefix}isoform_intron_matrix.npz', isoform_intron_matrix)
-    save_npz(f'{out_prefix}isoform_exon_matrix.npz', isoform_exon_matrix)
-
-
-    with open(f'{out_prefix}isoform_rows.txt', 'w') as output:
-        for isoform in all_isoforms:
-            print(isoform, file= output)
-
-    with open(f'{out_prefix}intron_cols.txt', 'w') as output:
-        for intron in all_introns:
-            print(intron, file= output)
-
-    with open(f'{out_prefix}exon_cols.txt', 'w') as output:
-        for exon in all_exons:
-            print(exon, file= output)
-
-
-
-
-
-
 def pseudo_dic_generation(barcode_pseudo_df):
     """
     This function return a dict that map pseudo sample to a list of barcodes in that sample
@@ -307,6 +192,7 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
     will return a new df that only contain the valid barcodes
 
     '''
+    valid_barcodes = set(valid_barcodes)
 
     filtered_index_list = [x for x in barcode_pseudo_df.index if x in valid_barcodes]
     filter_out_index_list = [x for x in barcode_pseudo_df.index if x not in valid_barcodes]
@@ -332,10 +218,11 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
     return  filtered_df
 
 
-
+# not in use
 def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w):
     """
-    This is the helper function for pseudo_eq_conversion, this function will be use 
+    This is the helper function for pseudo_eq_conversion, this function will be use to enable multiprocessing
+    This function will be called by parallel_EM_processing
 
     """
     temp_sample = cell_ec_sparse_pseudo_filt.getrow(i).toarray().ravel()
@@ -356,17 +243,32 @@ def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w):
     return TPM, count
 
 
+def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread):
+   
+
+    results = Parallel(n_jobs=thread)(delayed(process_pseudo_row)(i,cell_ec_sparse_pseudo_filt, ec_transcript_input, w) \
+                                  for i in range(cell_ec_sparse_pseudo_filt.shape[0]))
+
+    # Extracting results and combining them into matrices
+    pseudo_TPM = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
+    pseudo_count = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
+    
+    for value in results:
+        pseudo_TPM = vstack([pseudo_TPM, value[0]])
+        pseudo_count = vstack([pseudo_count, value[0]])
+    """
+    TPMs, counts = zip(*results)  # This separates TPM and count results
+    pseudo_TPM = np.vstack(TPMs)
+    pseudo_count = np.vstack(counts)
+    """
+    return pseudo_TPM, pseudo_count
 
 
 
 
 
 
-
-
-
-
-def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5, min_transcript = 0, out_prefix= '', threshold = 0.1):
+def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5, min_transcript = 0, out_prefix= '', threshold = 0.1, thread =8):
     """
     
 
@@ -382,6 +284,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     """
 
     threshold = float(threshold) # ensure the threshold is a float number
+    thread = int(thread)
     # step 1: data loading
     transcript_lengths_dic = calcutta_functions.get_transcript_lengths(Path(salmon_ref))    
     
@@ -409,6 +312,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     else:
         cell_ec_sparse = scipy.io.mmread(alevin_dir / "geqc_counts.mtx") 
         scipy.sparse.save_npz(npz_cache, cell_ec_sparse)  
+        
     cell_ec_sparse = cell_ec_sparse.tocsr()  # convert coo to csr format, necessary for row operation
     
     
@@ -435,6 +339,8 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     ec_transcript_ff = ec_transcript_filt[:,features_to_keep]
     
     
+    sys.stderr.write("start barcodes checking\n")
+    
     barcodes_pseudo = check_barcodes_exsitent(barcodes_pseudo,barcodes, out_prefix= f'{out_prefix}')
     pseudo_dict = pseudo_dic_generation(barcodes_pseudo)
     # get a dict that contain information about pseudo_sample: [barcode1,barcode2,.......]
@@ -455,6 +361,9 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     for batch in batches:
         batch_result = process_batch(cell_ec_filt, batch)
         pseudo_ec_sparse = vstack([pseudo_ec_sparse, batch_result])
+
+
+
 
     pseudo_ec_sparse = pseudo_ec_sparse.tocsr() 
     
@@ -477,8 +386,14 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
 
     # step 5: compute pseudo transcript matrix:
     ec_transcript_input = ec_transcript_ffff.tocoo()
+    
+    
+    pseudo_TPM, pseudo_count = parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread)
+    
+    """
     pseudo_TPM = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
     pseudo_count = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
+    
     for i in range(cell_ec_sparse_pseudo_filt.shape[0]):
     
         temp_sample = cell_ec_sparse_pseudo_filt.getrow(i)
@@ -493,13 +408,16 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
         # we don't need the actual count, we just need a scale that represent the support level of the TPM value
         # TPM * total_count will give a count-like value that retain the TPM ratio of transcripts
     
-        """
-        count = TPM/w
-        count = (count/count.sum()) * total_count
-        """
+        
+      
         
         pseudo_TPM = vstack([pseudo_TPM, TPM])
         pseudo_count = vstack([pseudo_count, count])
+        
+    """
+         #count = TPM/w
+        #count = (count/count.sum()) * total_count
+       
 
     # this will ensure that the extremly small value won't be detected in the final result
     pseudo_TPM.data[pseudo_TPM.data < 0.1] = 0 
@@ -507,7 +425,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     
     pseudo_count.data[pseudo_count.data < 0.1] = 0 
     pseudo_count.eliminate_zeros()
-    
+   
     
 
     # step 6: store matrices and eliminate unspliced isoform as they doesn't excised intron    
@@ -540,6 +458,17 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     save_npz(f'{out_prefix}pseudo_spliced_count.npz', spliced_pseudo_count)
 
 
+def extract_order(col):
+    '''
+    This is the helper function that ensure name in row will be sorted correctly
+
+    '''
+    match = re.match(r"(.*)_(\d+)$", col)
+    if match:
+        prefix = match.group(1)  # Everything before the last underscore
+        number = int(match.group(2))  # The numeric suffix after the last underscore
+        return (prefix, number)
+    return (col, 0)  # Default return for non-matching patterns
 
 
 
@@ -662,11 +591,19 @@ def sc_intron_count(reference_directory, pseudo_matrix_file, pseudo_cols_file, p
     
     
 
+    
+
     dense_exon = filtered_exon_count_matrix.toarray()
     df_exon = pd.DataFrame(dense_exon).T
     df_exon.index = filtered_exon_cols
     df_exon.columns = pseudo_rows
-
+    #df_exon = df_exon.sort_index(axis=1) # sort the columns
+    
+    
+    sorted_columns = sorted(df_intron.columns, key=extract_order)
+    df_intron = df_intron[sorted_columns] # sort the columns
+    df_exon = df_exon[sorted_columns]
+    
 
 
 
@@ -719,7 +656,7 @@ def LeafcutterITI_scITI(options):
     
     
         pseudo_eq_conversion(options.alevin_dir, options.salmon_ref, pseudobulk_name, min_EC = options.min_eq, min_transcript = 0, \
-                             out_prefix= out_prefix, threshold= options.samplecutoff)
+                             out_prefix= out_prefix, threshold= options.samplecutoff, thread = options.thread)
     
         sys.stderr.write("pseudobulk eq matrix were computed\n")
     
@@ -827,7 +764,9 @@ if __name__ == "__main__":
     parser.add_option('--pseudobulk_method', dest="pseudobulk_method", default = 'metacells',
                   help="the pseudobulk sample generate method, could be metacells or bootstrapping (default: metacells)")
 
-               
+    parser.add_option("--thread", dest="thread", default = 8,
+                  help="the thread use for computation")            
+                  
     parser.add_option("--normalization", dest="normalization", default = True,
                   help="whether to performance normalization, if not use TPM directly (default: True)")
     
