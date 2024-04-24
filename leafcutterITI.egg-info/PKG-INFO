@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: leafcutterITI
-Version: 0.2.20
+Version: 0.2.0
 Summary: LeafcutterITI implementation
 Author: Xingpei Zhang, David A Knowles
 License: MIT License
@@ -156,13 +156,13 @@ Optional Parameters:
 ```
 usage: python leafcutterITI_scITI.py [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
                           [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
-                          [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                          [--thread] [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff] 
                           [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
 
 or when install with pip
 leafcutterITI_scITI [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
                           [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
-                          [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                          [--thread] [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff] 
                           [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
 
 Mandatory parameters:
@@ -198,17 +198,19 @@ Optional Parameters:
 
 -o, --outprefix         The prefix for output files (default: leafcutter_)
 
---normalization         whether to used normalized counts, if not use TPM directly (default: True)
+--thread                The number of threads used for parallel computation, should not be too large to avoid crash
+
+--normalization         Whether to use normalized counts. If not, use TPM directly (default: True)
 
 --preprocessed          Whether pseudobulk generation and EM were done, if true, then the pipeline starts from counting intron (default: False)
 
 -v,--with_virtual       Whether the map that contain virtual intron to capture AFE and ALE(default: False)
 
---samplecutoff          minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
+--samplecutoff          minimum Normalized count/TPM for an isoform in a sample to count as exist (default: 0.1)
 
---introncutoff          minimum Normalized count/TPM for an intron to count as exist(default 5)
+--introncutoff          minimum Normalized count/TPM for an intron to count as exist(default: 80)
 
---m, --minclucounts     minimum Normalized count/TPM to support a cluster (default: 30)
+--m, --minclucounts     minimum Normalized count/TPM to support a cluster (default: 100)
 
 -r, --mincluratio       minimum fraction of reads in a cluster that supports an intron (default 0.01)
 
@@ -259,9 +261,9 @@ When --single_cell == True, five additional files will be generated. Two for spa
 LeafcutterITI utlized pseudoalignment method Salmon for bulk and preprocessed pseudobulk data. For usage of Salmon please refer https://salmon.readthedocs.io/en/latest/salmon.html
 
 For single-cell data, leafcutterITI utilized alevin-fry pipeline form Salmon. The usage of alevin-fry please refer https://alevin-fry.readthedocs.io/en/latest/. 
-Specific notices, please use -d, --dump-eqclasses flag when using alevin-fry quant to obtain the eqclass matrix
+Specific notices, please use -d, --dump-eqclasses flag when using alevin-fry quant to obtain the eqclass matrix. Also, t2t mapping should be used instead of normal t2g mapping. t2t mapping can be easily obtained by replacing the gene col in t2g file with the transcripts.
 
-In the rest of the tutorial, we assume RNA-seq data were aligned to the transcriptome using Salmon or with Alevin-fry. Then we will obtain file ending with .sf that described the isoform quantification results.
+In the rest of the tutorial, we assume RNA-seq data aligned to the transcriptome using Salmon or Alevin-fry. 
 
 ### Step 2.1: Single-cell clustering after alevin-fry
 
@@ -305,7 +307,17 @@ These two files are equivalent to Leafcutter clustering numers.counts.gz and cou
 
 ### Step 3.2: LeafcutterITI clustering for single-cell data
 
-For this step, we assume the data we are processing are single-cell data. Results from Step 2 and Step 2.1 were obtained. 
+For this step, we assume the data we are processing are single-cell data. Results from Step 2 and Step 2.1 were obtained. The files required for this step will be the salmon/alevin directory that contains files `gene_eqclass.txt.gz`, `geqc_counts.mtx`, and other relevant files from alevin-fry.
+
+Sample run:
+```
+LeafcutterITI-scITI --alevin_dir salmon/out_permit_know/quant_spliceu_t2t [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
+
+
+--map transcript_intron_map.tsv --count_files quantification_files.txt --connect_file intron_exon_connectivity.tsv -a gencode.v45.annotation.gtf --cluster_def 3 \
+                                --normalization True -o sample_run_ --minclucounts 30 --mincluratio 0.01
+```
+
 
 
 
