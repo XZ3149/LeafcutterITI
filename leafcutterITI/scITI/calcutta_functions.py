@@ -106,7 +106,6 @@ def EM(counts, ec_transcript_mat, w, iterations = 30):
         alpha_new /= alpha_new.sum()
         #print(i,np.mean(np.abs(alpha - alpha_new)),end="\r")
         alpha = alpha_new
-        
     return alpha
 
 

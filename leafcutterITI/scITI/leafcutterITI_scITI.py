@@ -4,7 +4,7 @@ import sys
 import warnings
 import scipy
 import scipy.sparse
-from scipy.sparse import csr_matrix, save_npz, load_npz, vstack
+from scipy.sparse import csr_matrix, save_npz, load_npz, vstack, coo_array
 from optparse import OptionParser
 import random
 from pathlib import Path
@@ -146,7 +146,7 @@ def pseudo_dic_generation(barcode_pseudo_df):
     samples = barcode_pseudo_df['sample'].unique()
     sample_dic = {}
     for name in samples:
-        sample_dic[name] = list(barcode_pseudo_df[barcode_pseudo_df['sample'] == name].index)
+        sample_dic[name] = list(barcode_pseudo_df[barcode_pseudo_df['sample'] == name].barcode)
     return sample_dic
 
 def pseudo_index_dic_generation(sample_dic, barcodes):
@@ -193,27 +193,37 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
 
     '''
     valid_barcodes = set(valid_barcodes)
-
+    """
     filtered_index_list = [x for x in barcode_pseudo_df.index if x in valid_barcodes]
     filter_out_index_list = [x for x in barcode_pseudo_df.index if x not in valid_barcodes]
-    
-    
     filtered_df = barcode_pseudo_df.loc[filtered_index_list]
+    """
+
+    filtered_df = barcode_pseudo_df[barcode_pseudo_df['barcode'].isin(valid_barcodes)]
+
+    filter_out_df = barcode_pseudo_df[~ barcode_pseudo_df['barcode'].isin(valid_barcodes)]
 
 
     with open(f'{out_prefix}eliminated_barcodes.txt', 'w') as file:
-        for barcode in filter_out_index_list:
+        for barcode in list(filter_out_df['barcode']):
             file.write(f"{barcode}\n")
             
             
-    pseudo_count = filtered_df['sample'].value_counts().sort_index()
+    pseudo_count = filtered_df['sample'].value_counts()
+    # sorting by sample names
+    split_columns = pseudo_count.index.to_series().str.extract(r'([a-zA-Z]+)_([0-9]+)$')
+    split_columns[1] = split_columns[1].astype(int)
+    sorted_indices = split_columns.sort_values(by=[0, 1]).index
+    pseudo_count = pseudo_count.reindex(sorted_indices)
+
+
 
     with open(f'{out_prefix}pseudo_barcodes_counts.txt', 'w') as file:
         for pseudo, count in pseudo_count.items():
             file.write(f"{pseudo} {count}\n")
 
 
-    sys.stderr.write(f"There are {len(filter_out_index_list)} barcodes get eliminated \n")
+    sys.stderr.write(f"There are {len(filter_out_df)} barcodes get eliminated \n")
     
     return  filtered_df
 
@@ -252,10 +262,13 @@ def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, t
     # Extracting results and combining them into matrices
     pseudo_TPM = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
     pseudo_count = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
+
     
     for value in results:
-        pseudo_TPM = vstack([pseudo_TPM, value[0]])
-        pseudo_count = vstack([pseudo_count, value[0]])
+        tmp_tpm = csr_matrix(value[0].reshape(1,-1))
+        tmp_count = csr_matrix(value[1].reshape(1,-1))
+        pseudo_TPM = vstack([pseudo_TPM, tmp_tpm])
+        pseudo_count = vstack([pseudo_count, tmp_count])
     """
     TPMs, counts = zip(*results)  # This separates TPM and count results
     pseudo_TPM = np.vstack(TPMs)
@@ -290,7 +303,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     
     
     
-    barcodes_pseudo = pd.read_csv(barcode_pseudo_file, header = None, sep = ',', index_col =0,  names = ['sample'])
+    barcodes_pseudo = pd.read_csv(barcode_pseudo_file, header = None, sep = ',',   names = ['barcode','sample'])
     alevin_dir = Path(alevin_dir)
     
     map_cache = alevin_dir / "gene_eqclass.npz"
