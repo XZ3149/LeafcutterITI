@@ -15,7 +15,7 @@ chr_dic = {'chr1': 0,'chr2': 1,'chr3': 2,'chr4': 3,'chr5': 4,'chr6': 5,'chr7': 6
 
 
 
-def transcript_to_intron_counts(row, trans_int_map, sample_name, introns_dic, exons_dic,normalize_count, unmapped_transcript):
+def transcript_to_intron_counts(row, trans_int_map, sample_name, introns_dic, exons_dic,TPM_count, unmapped_transcript):
     """
     
     Parameters
@@ -44,7 +44,7 @@ def transcript_to_intron_counts(row, trans_int_map, sample_name, introns_dic, ex
 
   
     transcript_name = row['Name']
-    if normalize_count:
+    if TPM_count == False:
         value = row['normalized_count']  
     else: 
         value = row['TPM']
@@ -87,7 +87,6 @@ def transcript_to_intron_counts(row, trans_int_map, sample_name, introns_dic, ex
             
     return None
     
-
 
 
 def dic_to_csv(dic, output_name, samples):
@@ -147,9 +146,8 @@ def dic_to_csv(dic, output_name, samples):
 
 
 
-
 @timing_decorator
-def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, normalize_count = False):
+def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, TPM_count = False):
     """
     Parameters
     ----------
@@ -172,7 +170,7 @@ def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, n
     try:
         trans_map = pd.read_csv(trans_int_map_file, sep = ' ')
     except:
-        sys.exit("%s does not exist... check your count files.\n"%trans_map) 
+        sys.exit("%s does not exist... check your map file.\n"%trans_map) 
     
     trans_map = pd.read_csv(trans_int_map_file, sep = ' ')
     trans_map = trans_map.replace({np.nan: None}) 
@@ -186,7 +184,7 @@ def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, n
     for name in samples:
         try:
             df = pd.read_csv(name, sep = '\t')
-            if normalize_count:
+            if TPM_count == False:
                 df = df[df.normalized_count > threshold].reset_index(drop = True)   # drop trancript expressed too low
             else:
                 df = df[df.TPM > threshold].reset_index(drop = True)
@@ -196,7 +194,7 @@ def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, n
         base_name = name.split("/")[-1]
         base_names.append(base_name)
 
-        _ = df.apply(transcript_to_intron_counts, axis = 1, args=(trans_map,base_name, introns_dic, exons_dic, normalize_count, unmapped_transcript))
+        _ = df.apply(transcript_to_intron_counts, axis = 1, args=(trans_map,base_name, introns_dic, exons_dic, TPM_count, unmapped_transcript))
 
     dic_to_csv(introns_dic, f'{out_prefix}count_intron', base_names)  # save the dic in csv format
     dic_to_csv(exons_dic, f'{out_prefix}count_exon', base_names)
@@ -216,8 +214,6 @@ def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, n
         print(f'There are {len(unmapped_transcript)} transcript not found in Transcript to intron map, please check the version of annotation or may due to filtering step')
     
     return pd.read_csv(f'{out_prefix}count_intron', sep = ' ')
-
-
 
 
 @timing_decorator
@@ -812,13 +808,13 @@ def extract_transcript_to_gene_map(gtf_file):
 @timing_decorator
 def LeafcutterITI_clustering(options):
     """
-    This is the main function for LeafcutterITI
+    This is the main function for LeafcutterITI clustering
     """
 
     samples = input_file_processing(options.count_files)
     
     # perform normalization
-    if options.normalization == True and options.preprocessed == False:
+    if options.use_TPM == False and options.preprocessed == False:
         new_samples = []
         for sample in samples:
             prefix = sample.split(".")[0] # get rid of the .sf
@@ -841,7 +837,7 @@ def LeafcutterITI_clustering(options):
                   options.map, \
                   out_prefix= out_prefix,\
                   threshold = options.samplecutoff,\
-                  normalize_count = options.normalization)
+                  TPM_count = options.use_TPM)
     sys.stderr.write("Finished Introns Counting\n")
     
     
@@ -864,11 +860,10 @@ def LeafcutterITI_clustering(options):
     sys.stderr.write("Finished PSI calculation\n")
 
     record = f'{options.outprefix}clustering_parameters.txt'
-    sys.stderr.write(f'saving paramters to {record}\n')
+    sys.stderr.write(f'saving parameters to {record}\n')
     write_options_to_file(options, record)
     
     sys.stderr.write('CLustering Fnished\n')
-
 
 
 
@@ -892,10 +887,10 @@ if __name__ == "__main__":
                   help="Intron and exon connectivity file (default:None)")
     
     parser.add_option("-a","--annot", dest="annot", default = None,
-                  help="transcriptome annotation, required if normalization == True (default: None)")
+                  help="transcriptome annotation, required if TPM_count is not used (default: None)")
 
     
-    parser.add_option("--cluster_def", dest="cluster_def", default = 3,
+    parser.add_option("--cluster_def", dest="cluster_def", default = 3, type="int",
                   help="three def available, 1: overlap, 2: overlap+share_intron_splice_site, \
                       3: overlap+share_intron_splice_site+shared_exon_splice_site")
     
@@ -905,29 +900,29 @@ if __name__ == "__main__":
     
                   
 
-    parser.add_option("-n", "--normalization", dest="normalization", default = True,
-                  help="whether to performance normalization, if not use TPM directly (default: True)")
+    parser.add_option("--use_TPM", dest = "use_TPM", action="store_true",default = False,
+                  help="whether to performance normalization, if use TPM directly (default: False)")
     
-    parser.add_option("--preprocessed", dest="preprocessed", default = False,
+    parser.add_option("--preprocessed", dest="preprocessed", default = False,action="store_true",
                   help="Whether normalization already been done for the count_files (default: False)")
     
+    
         
-    parser.add_option("--samplecutoff", dest="samplecutoff", default = 0,
+    parser.add_option("--samplecutoff", dest="samplecutoff", default = 0, type="float",
                   help="minimum count for an intron in a sample to count as exist(default: 0)")
 
-    parser.add_option("--introncutoff", dest="introncutoff", default = 5,
+    parser.add_option("--introncutoff", dest="introncutoff", default = 5,type="float",
                   help="minimum count for an intron to count as exist(default 5)")
     
-    parser.add_option("-m", "--minclucounts", dest="minclucounts", default = 30,
+    parser.add_option("-m", "--minclucounts", dest="minclucounts", default = 30, type="float",
                   help="minimum count in a cluster (default 30 normalized count)")
     
-    parser.add_option("-r", "--mincluratio", dest="mincluratio", default = 0.01,
+    parser.add_option("-r", "--mincluratio", dest="mincluratio", default = 0.01, type="float",
                   help="minimum fraction of reads in a cluster that support a junction (default 0.01)")
 
 
     
     (options, args) = parser.parse_args()
-
 
 
 
@@ -941,13 +936,12 @@ if __name__ == "__main__":
         sys.exit("Error: Intron exon connectivity file provided...\n")
     
 
-    if options.normalization == True and options.annot == None:
+    if options.use_TPM == False and options.annot == None:
         sys.exit("Error: no annotation file provided, this is required if normalization == True...\n")
         
 
    
     LeafcutterITI_clustering(options)
-
 
 
 

@@ -75,6 +75,7 @@ def bootstrapping(type_dic, n, k, out_prefix = ''):
     """
     n = int(n)
     bootstrap_dic = {}
+    k = int(k)
     with open(f'{out_prefix}bootstrapping_record.txt', 'w') as output, open(f'{out_prefix}bootstrapping_group.txt', 'w') as group_file:
         print('type/cluster num', file=output)
         for key in type_dic:
@@ -88,7 +89,7 @@ def bootstrapping(type_dic, n, k, out_prefix = ''):
                 
                 for i in range(k):
                     print(f'{key}_{i} {key}', file = group_file)
-                    bootstrap_dic[f'{key}_{i}'] = random.choices(barcodes , k=k)
+                    bootstrap_dic[f'{key}_{i}'] = random.choices(barcodes , k=n)
 
     return bootstrap_dic
     
@@ -211,7 +212,7 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
             
     pseudo_count = filtered_df['sample'].value_counts()
     # sorting by sample names
-    split_columns = pseudo_count.index.to_series().str.extract(r'([a-zA-Z]+)_([0-9]+)$')
+    split_columns = pseudo_count.index.to_series().str.extract(r'(.*)_(\d+)$')
     split_columns[1] = split_columns[1].astype(int)
     sorted_indices = split_columns.sort_values(by=[0, 1]).index
     pseudo_count = pseudo_count.reindex(sorted_indices)
@@ -677,7 +678,7 @@ def LeafcutterITI_scITI(options):
     ref_prefix = f'{options.ref_dir}/{options.ref_prefix}'
         
 
-    if options.normalization == True:
+    if options.use_TPM == False:
         pseudo_matrix_file = f'{out_prefix}pseudo_spliced_count.npz'
     else:
         pseudo_matrix_file = f'{out_prefix}pseudo_spliced_TPM.npz'
@@ -764,11 +765,11 @@ if __name__ == "__main__":
                help="the reference prefix that is used to generate isoform to intron map using\
                leacutterITI_map_gen (default: '')")            
                
-    parser.add_option("-n",'--num_cell', dest="num_cell", default = 100,
+    parser.add_option("-n",'--num_cell', dest="num_cell", default = 100, type="int",
                   help="the number of cell/barcode that would like to include in a pseudobulk sample, cluster/cell type that have fewer cell than\
                       this number will not included in the computation (default: 100)")
     
-    parser.add_option("-k",'--num_bootstrapping', dest="num_bootstrapping", default = 30,
+    parser.add_option("-k",'--num_bootstrapping', dest="num_bootstrapping", default = 30, type="int",
                   help="the number of bootstrapping samples generated for each cluster/cell type (default: 30)")
     parser.add_option("--min_eq", dest="min_eq", default = 5,
                   help="minimum count for each eq class for it to be included in the EM (default: 5)")
@@ -777,21 +778,22 @@ if __name__ == "__main__":
     parser.add_option('--pseudobulk_method', dest="pseudobulk_method", default = 'metacells',
                   help="the pseudobulk sample generate method, could be metacells or bootstrapping (default: metacells)")
 
-    parser.add_option("--thread", dest="thread", default = 8,
+    parser.add_option("--thread", dest="thread", default = 8, type="int",
                   help="the thread use for computation")            
                   
-    parser.add_option("--normalization", dest="normalization", default = True,
+    parser.add_option("--use_TPM", dest="use_TPM", default = False, action="store_true",
                   help="whether to performance normalization, if not use TPM directly (default: True)")
     
-    parser.add_option("--preprocessed", dest="preprocessed", default = False,
+    
+    parser.add_option("--preprocessed", dest="preprocessed", default = False, action="store_true",
                   help="Whether pseudobulk generation and EM were done, if true, \
                       then the pipeline start from counting intron (default: False)")
 
-    parser.add_option("-v","--with_virtual", dest="with_virtual", default = False,
+    parser.add_option("-v","--with_virtual", dest="with_virtual", action="store_true", default = False,
                   help="Whether the map that contain virtual intron to capture AFE and ALE(default: False)")
     
     
-    parser.add_option("--cluster_def", dest="cluster_def", default = 3,
+    parser.add_option("--cluster_def", dest="cluster_def", default = 3, type="int",
                   help="three def available, 1: overlap, 2: overlap+share_intron_splice_site, \
                       3: overlap+share_intron_splice_site+shared_exon_splice_site")
     
@@ -799,16 +801,16 @@ if __name__ == "__main__":
                   help="output prefix , should include the diretory address if not\
                   in the same dic (default leafcutterITI_)")    
 
-    parser.add_option("--samplecutoff", dest="samplecutoff", default = 0.1,
+    parser.add_option("--samplecutoff", dest="samplecutoff", default = 0.1, type="float",
                   help="minimum count for an isoform in a sample to count as exist(default: 0.1)")
 
-    parser.add_option("--introncutoff", dest="introncutoff", default = 80,
+    parser.add_option("--introncutoff", dest="introncutoff", default = 80,type="float",
                   help="minimum count for an intron to count as exist(default 5)")
     
-    parser.add_option("-m", "--minclucounts", dest="minclucounts", default = 100,
+    parser.add_option("-m", "--minclucounts", dest="minclucounts", default = 100,type="float",
                   help="minimum count in a cluster (default 30 normalized count)")
     
-    parser.add_option("-r", "--mincluratio", dest="mincluratio", default = 0.01,
+    parser.add_option("-r", "--mincluratio", dest="mincluratio", default = 0.01,type="float",
                   help="minimum fraction of reads in a cluster that support a junction (default 0.01)")
 
 

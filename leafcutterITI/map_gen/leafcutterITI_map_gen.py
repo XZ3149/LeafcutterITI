@@ -20,7 +20,7 @@ chr_dic = {'chr1': 0,'chr2': 1,'chr3': 2,'chr4': 3,'chr5': 4,'chr6': 5,'chr7': 6
 
 
 ##################################isoform to intron and exon map generation
-def compute_transcript_intron_map(annot, out_prefix = '', annot_type = 'gencode', min_length = 50, max_length = 5000000, quality_control = True):
+def compute_transcript_intron_map(annot, out_prefix = '', annot_type = 'gencode', min_length = 50, max_length = 5000000, no_quality_control = False):
     """
 
     Parameters
@@ -79,7 +79,7 @@ def compute_transcript_intron_map(annot, out_prefix = '', annot_type = 'gencode'
             print(f'{key} {gene_dic[key]} {name_dic[key]}', file = reference_list)
         reference_list.close()
 
-    elif quality_control == True:
+    elif no_quality_control == False:
         df = df[~ df['gene_type'].str.contains('pseudogene', na = False)]
         df = df[~ df['transcript_type'].str.contains('decay', na = False)]
         # df = df[~ df['transcript_type'].str.contains('retained_intron', na = False)]
@@ -534,7 +534,7 @@ def LeafcutterITI_map_generation(options):
                                   annot_type = options.annot_source,\
                                   min_length = options.minintronlen,\
                                   max_length= options.maxintronlen, \
-                                  quality_control= options.quality_control)
+                                  no_quality_control= options.no_quality_control)
         
     out_prefix = options.outprefix    
     
@@ -572,17 +572,21 @@ if __name__ == "__main__":
                   help="output prefix (default leafcutter_), should include the diretory address if not\
                   in the same dic")    
 
-    parser.add_option("--maxintronlen", dest="maxintronlen", default = 5000000,
+    parser.add_option("--maxintronlen", dest="maxintronlen", default = 5000000, type="int",
                   help="maximum intron length in bp (default 500,000bp)")
         
-    parser.add_option("--minintronlen", dest="minintronlen", default = 50,
+    parser.add_option("--minintronlen", dest="minintronlen", default = 50,type="int",
                   help="minimum intron length in bp (default 50bp)")
 
-    parser.add_option("--quality_control", dest="quality_control", default = True,
-                 help="whether to remove pseudogene, and decay transcript")
 
-    parser.add_option("-v", "--virtual_intron", dest="virtual_intron", default = False,
+
+
+    parser.add_option("--no_quality_control", dest="no_quality_control", default = False, action="store_true",
+                 help="whether to retain pseudogene, and decay transcript")
+
+    parser.add_option("-v", "--virtual_intron", dest="virtual_intron", action="store_true", default = False,
                  help="whether to use virtual intron to capture alternative first and last exon usage")
+    
     
     parser.add_option("--single_cell", dest="single_cell", default = True,
                  help="whether to build matrices for isoform to intron and exon, required if dealing with\
@@ -613,10 +617,6 @@ if __name__ == "__main__":
     LeafcutterITI_map_generation(options)
     
     sys.stderr.write('Finish building Isofrom to intron map \n')
-
-
-
-
 
 
 
