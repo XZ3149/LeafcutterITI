@@ -363,6 +363,9 @@ def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_p
                     new_clus = refine_links(introns, exon_connection = True)
             
                 for clu in new_clus:
+                    
+                    #clus = cluster_intervals(introns)
+                    
                     process_clu(clu, cluster_dic, cutoff, percent_cutoff, mode)
             
             
@@ -513,12 +516,16 @@ def filter_introns(introns, cutoff, percent_cutoff):
     percent_cutoff: float
     """
     
+    
+    
+    
     total_TPM = 0
     for intron in introns: #loop over to get total TPM
         total_TPM += intron[2]
     
     new_introns = []
     reclu = False
+    
     
     for intron in introns: 
         
@@ -527,7 +534,9 @@ def filter_introns(introns, cutoff, percent_cutoff):
             new_introns.append(intron)
         else:
             reclu = True
-    
+    if len(cluster_intervals(introns)) >= 2: 
+        # this is necessary after refined link, as refined link doesn't ensure overlap between introns
+        reclu = True
 
     return new_introns, reclu
 
@@ -541,8 +550,6 @@ def cluster_intervals(introns):
     
     clusters = []
     
-
-
     tmp_clu = [introns[0]] # init with the first intron
     current_intron = introns[0]    
     

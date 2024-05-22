@@ -326,7 +326,9 @@ def filter_introns(introns, cutoff, percent_cutoff):
             new_introns.append(intron)
         else:
             reclu = True
-    
+    if len(cluster_intervals(introns)) >= 2: 
+        # this is necessary after refined link, as refined link doesn't ensure overlap between introns
+        reclu = True
 
     return new_introns, reclu
 
