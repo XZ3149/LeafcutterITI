@@ -210,6 +210,7 @@ def process_clusters(init_clus_file, exon_count_file, intron_to_exon_file, out_p
 
 
 
+
 def build_intron(index, row, samples, exon_count,intron_to_exon):
     """
     a helper function for process_clusters function
@@ -236,6 +237,7 @@ def build_intron(index, row, samples, exon_count,intron_to_exon):
     
     
     exon_sites = set()
+    exon_set = set()
     
     if index in intron_to_exon.index and pd.notna(intron_to_exon.at[index,'near_exons']): 
         #add this check because virtual intron 0 and -1 will not have connected exon
@@ -249,8 +251,11 @@ def build_intron(index, row, samples, exon_count,intron_to_exon):
             exon_infor = exon_count.loc[exon]
             exon_sites.add(exon_infor['Start'])
             exon_sites.add(exon_infor['End'])
-            
-    intron.append(exon_sites)
+    
+    
+    exon_set = set(exons)
+    #intron.append(exon_sites)
+    intron.append(exon_set)
     
     return intron
     

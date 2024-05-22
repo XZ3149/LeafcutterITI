@@ -6,7 +6,7 @@ import setuptools
 setup(
         name='leafcutterITI',
         packages=find_packages(),
-        version='0.2.37',
+        version='0.2.38',
         description='LeafcutterITI implementation',
         author='Xingpei Zhang, David A Knowles',
         license='MIT',

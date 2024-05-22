@@ -440,6 +440,7 @@ def build_intron(index, row, samples, exon_count,intron_to_exon):
     
     
     exon_sites = set()
+    exon_set = set()
     
     if index in intron_to_exon.index and pd.notna(intron_to_exon.at[index,'near_exons']): 
         #add this check because virtual intron 0 and -1 will not have connected exon
@@ -453,8 +454,11 @@ def build_intron(index, row, samples, exon_count,intron_to_exon):
             exon_infor = exon_count.loc[exon]
             exon_sites.add(exon_infor['Start'])
             exon_sites.add(exon_infor['End'])
-            
-    intron.append(exon_sites)
+    
+    
+    exon_set = set(exons)
+    #intron.append(exon_sites)
+    intron.append(exon_set)
     
     return intron
     
@@ -597,6 +601,7 @@ def refine_links(introns, exon_connection = True):
     """ 
     this is the helper function of process_clusters, it will generate a list of Intron_cluster object
     input should be a list of introns in format [[start,end,count,name, {exon_slicesites}]]
+    # special notice: exon_splicesites is now using exon instead, but the varaible name haven't change yet
     """
     
     unassigned = introns[1:]
@@ -605,6 +610,9 @@ def refine_links(introns, exon_connection = True):
 
     splicesites = set([current[0][0],current[0][1]])
     exon_splicesites = set(current[0][4])
+    
+    
+    
     newClusters = []
     
     

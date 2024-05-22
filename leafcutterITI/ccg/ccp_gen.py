@@ -126,7 +126,7 @@ def process_cluster(df, intron_exon_dic, cluster_def):
     G = nx.Graph() # generate a empty graph
 
     for i in range(len(intron_list)):
-        for j in range(i,len(intron_list)):
+        for j in range(i + 1,len(intron_list)):
             intron1 = intron_list[i]
             intron2 = intron_list[j]
             # weight = intron1['sum'] + intron2['sum'] # update to add weight for edges
@@ -165,6 +165,8 @@ def gen_cluster_edges(cluster_file, exon_count, intron_exon_connectivity, exon_t
     df = pd.read_csv(cluster_file,sep = ' ', index_col = 0)
     df['sum'] = df.sum(axis=1)
     df[['chr', 'start', 'end', 'cluster']] = df.index.to_series().str.split(':', expand=True)
+    df['cluster'] = df['cluster'].str.slice(0, -2) # remove the strand as strand may have problem due to annotation
+    
     # df['cluster'] = df['cluster'].str[:-2] # get rid of the strand sign
     df['name'] = df.index.to_series().apply(lambda x: ':'.join(x.split(':')[:-1]))
     
@@ -197,6 +199,198 @@ def gen_cluster_edges(cluster_file, exon_count, intron_exon_connectivity, exon_t
     result_df= result_df.drop(columns='number')
     result_df = result_df.reset_index(drop=True)
     result_df.to_csv(f'{out_prefix}clusters_edges.tsv', sep = '\t', index = False)
+
+
+
+
+
+
+
+def comparison_between_samples(sample_A, sample_B, name_A, name_B, out_prefix = ''):
+    """
+    This function sort to compare the similarity between two samples in term of 
+    cluster relationship
+    The clusters location supposed to be sorted based on chr, start, end 
+    Which mean with in the same chr, cluster i must have start smaller than cluster i + 1
+    This enable efficient looping using two pointers for comparison
+    """
+    df_A = pd.read_csv(sample_A, sep = '\t')
+    df_B = pd.read_csv(sample_B, sep = '\t')
+    
+    all_edges_A = set()
+    all_edges_B = set()
+    edges_to_cluster_dic_A = dict()
+    edges_to_cluster_dic_B = dict()
+    cluster_to_edges_dic_A = dict()
+    cluster_to_edges_dic_B = dict()
+    unique_clu_A = set()
+    unique_clu_B = set()
+    
+    output_df = pd.DataFrame(columns=[name_A, name_B,'shared_edges', f'{name_A}_unique_edges', f'{name_B}_unique_edges','jaccard_index'])
+    def process_sample_row(row, edges_to_cluster_dic, cluster_to_edges_dic, all_edges, unique_clu):
+        edges = edges_str_to_set(row)
+        name = row['cluster_name']
+        
+        for edge in edges:
+        
+            edges_to_cluster_dic[edge] = name
+            
+        cluster_to_edges_dic[name] = edges
+        all_edges.update(edges)
+        unique_clu.add(name)
+        
+    _ = df_A.apply(process_sample_row, axis = 1, args=(edges_to_cluster_dic_A,cluster_to_edges_dic_A, all_edges_A,unique_clu_A))
+    _ = df_B.apply(process_sample_row, axis = 1, args=(edges_to_cluster_dic_B,cluster_to_edges_dic_B, all_edges_B,unique_clu_B))
+    
+    
+    
+    remain_intersection = all_edges_A.intersection(all_edges_B)
+    
+    count_identical = 0
+    count_partial = 0
+
+    output_df = pd.DataFrame(columns=[name_A, name_B,'shared_edges', f'{name_A}_unique_edges', f'{name_B}_unique_edges','jaccard_index'])
+    
+    while len(remain_intersection) > 0:
+        current_edge = min(remain_intersection)
+        
+        tmp_clu_A = edges_to_cluster_dic_A[current_edge]
+        tmp_clu_B = edges_to_cluster_dic_B[current_edge]
+        edges_A = cluster_to_edges_dic_A[tmp_clu_A]
+        edges_B = cluster_to_edges_dic_B[tmp_clu_B]
+        intersection = edges_A.intersection(edges_B)
+    
+        unique_A = edges_A.difference(edges_B)
+        unique_B = edges_B.difference(edges_A)
+        jaccard = jaccard_index(edges_A, edges_B)
+                
+
+        intersection_output = ",".join(intersection)
+        unique_A_output = ",".join(unique_A)
+        unique_B_output = ",".join(unique_B)
+
+        jaccard = jaccard_index(edges_A, edges_B)
+        
+        
+        if len(intersection) == len(edges_A) and len(intersection) == len(edges_B):
+            count_identical += 1
+        else:
+            count_partial += 1
+            
+        output_df.loc[len(output_df)] = [tmp_clu_A, tmp_clu_B, intersection_output, unique_A_output, unique_B_output,\
+                                                         jaccard]
+    
+        unique_clu_A.discard(tmp_clu_A)
+  
+        unique_clu_B.discard(tmp_clu_B)
+        remain_intersection = remain_intersection - intersection
+
+    
+    count_A_unique = len(unique_clu_A)
+    for clu in unique_clu_A:
+        output_df.loc[len(output_df)] = [clu, None, set(), ",".join(cluster_to_edges_dic_A[clu]), set(),\
+                                                         0]
+    count_B_unique = len(unique_clu_B)
+    for clu in unique_clu_B:
+        output_df.loc[len(output_df)] = [None, clu, set(), set(), ",".join(cluster_to_edges_dic_B[clu]),\
+                                                             0]
+     
+    
+    total_jaccard = jaccard_index(all_edges_A, all_edges_B)
+    
+    
+    
+    result = open(f'{out_prefix}stat.txt', 'w') 
+    print(f'The overall Jaccard score between this two samples is {total_jaccard}', file = result)
+    print(f'There are {count_identical} identical cluster', file = result)
+    print(f'There are {count_partial} partial similar cluster pairs', file = result)
+    print(f'There are {count_A_unique} unique cluster in {name_A}', file= result)
+    print(f'There are {count_B_unique} unique cluster in {name_B}', file = result)
+    result.close()
+    output_df.to_csv(f'{out_prefix}comparison.tsv', sep = '\t', index = None)
+    
+
+
+
+
+
+
+
+
+            
+def jaccard_index(set1, set2):
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    return intersection / union
+    
+
+
+def check_cluster_overlap(A,B):
+    """
+    This function check whether two cluster is overlap or not
+
+    """
+
+    if A['end'] < B['start'] or B['end'] < A['start']:
+        return False
+    else:
+        return True
+
+def edges_str_to_set(row):
+    """
+    This function turn a string in format 'chr1:4777500:4782567-chr1:4777648:4782567, ..., ' into a a set of edges
+
+    """
+    
+    edges = row['cluster_edges']
+    edges = set(edges.split(','))
+    return edges 
+
+
+
+
+
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
