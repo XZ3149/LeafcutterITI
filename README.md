@@ -61,7 +61,7 @@ Optional Parameters:
 
 --minintronlen          The minimum allowed intron length for introns (default: 50)
 
-----no_quality_control  A flag on whether not to remove pseudogene, and decay transcript
+--no_quality_control  A flag on whether not to remove pseudogene, and decay transcript
 
 -v, --virtual_intron    A flag on whether to compute virtual intron that can be used to capture
                         AFE and ALE usage, a testing feature
