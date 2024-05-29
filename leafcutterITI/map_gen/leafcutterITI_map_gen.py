@@ -606,7 +606,7 @@ if __name__ == "__main__":
     sys.stderr.write(f"outprefix: {options.outprefix}\n")
     sys.stderr.write(f"Max intron length: {options.maxintronlen}\n")
     sys.stderr.write(f"Min intron length: {options.minintronlen}\n")
-    sys.stderr.write(f"remove pseudogene and decay transcript: {options.quality_control}\n")
+    sys.stderr.write(f"not removing pseudogene and decay transcript: {options.no_quality_control}\n")
     sys.stderr.write(f"virtual intron: {options.virtual_intron}\n")
     
     record = f'{options.outprefix}map_parameters.txt'
