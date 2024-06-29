@@ -748,7 +748,7 @@ def input_file_processing(input_file):
 
 
 
-def count_TPM_normalization(quant_file, gft_file, out_prefix= None):
+def count_TPM_normalization_local(quant_file, gft_file, out_prefix= None):
     # Your function implementation
     df = pd.read_csv(quant_file, sep='\t')
     df = df[df['TPM'] > 0]
@@ -774,6 +774,20 @@ def count_TPM_normalization(quant_file, gft_file, out_prefix= None):
     output_file = f'{out_prefix}_normalized.sf' if out_prefix else 'normalized.sf'
     df.to_csv(output_file, sep='\t', index=False)
 
+def count_TPM_normalization_global(quant_file, gft_file, out_prefix= None):
+    # Your function implementation
+    df = pd.read_csv(quant_file, sep='\t')
+    df = df[df['TPM'] > 0]
+
+
+    scale = df['NumReads'].sum() / df['TPM'].sum()
+  
+
+    df['normalized_count'] = scale * df[TPM] 
+
+    # Use the out_prefix to determine the output file name
+    output_file = f'{out_prefix}_normalized.sf' if out_prefix else 'normalized.sf'
+    df.to_csv(output_file, sep='\t', index=False)
 
 
 
@@ -833,7 +847,11 @@ def LeafcutterITI_clustering(options):
         new_samples = []
         for sample in samples:
             prefix = sample.split(".")[0] # get rid of the .sf
-            count_TPM_normalization(sample, options.annot, prefix)
+
+            if normalization_scale == 'global':
+                count_TPM_normalization_global(sample, options.annot, prefix)
+            elif normalization_scale == 'local':
+                count_TPM_normalization_local(sample, options.annot, prefix)
             new_samples += [f'{prefix}_normalized.sf']
                
         samples = new_samples
@@ -913,7 +931,9 @@ if __name__ == "__main__":
                   help="output prefix , should include the diretory address if not\
                   in the same dic (default leafcutterITI_)")    
     
-                  
+    parser.add_option("--normalization_scale", , dest="normalization_scale", default = 'local',
+                  help="the scale used for normalization, local normnalize based on gene, global 
+                  use all reads/all TPMs prefix (default: local)")                  
 
     parser.add_option("--use_TPM", dest = "use_TPM", action="store_true",default = False,
                   help="whether to performance normalization, if use TPM directly (default: False)")
