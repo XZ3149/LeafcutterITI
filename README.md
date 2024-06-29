@@ -76,11 +76,11 @@ Optional Parameters:
 ```
 usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [--use_TPM] [--samplecutoff]
-                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--normalization_scale]
 or when install with pip
 leafcutterITI-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
-                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
+                    [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--normalization_scale]
 
 
 Mandatory parameters:
@@ -103,6 +103,8 @@ Optional Parameters:
 
 --preprocessed          A flag on Whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
                         perform normalization again
+--normalization_scale   The mode use for normaliztion, whether the count/TPM scale is based on local (gene level) or global level, can only input
+                        local or global (default: local)
 
 --samplecutoff          Minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
 
@@ -110,7 +112,7 @@ Optional Parameters:
 
 --m, --minclucounts     Minimum Normalized count/TPM to support a cluster (default: 30)
 
--r, --mincluratio       Minimum fraction of reads in a cluster that supports an intron (default 0.01)
+-r, --mincluratio       Minimum fraction of reads in a cluster that supports an intron (default: 0.01)
 
 ```
 
