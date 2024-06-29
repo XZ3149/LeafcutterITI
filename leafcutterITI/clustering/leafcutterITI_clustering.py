@@ -852,6 +852,9 @@ def LeafcutterITI_clustering(options):
                 count_TPM_normalization_global(sample, options.annot, prefix)
             elif normalization_scale == 'local':
                 count_TPM_normalization_local(sample, options.annot, prefix)
+            else: 
+                sys.exit("Error: invalid normalization scale...\n")
+              
             new_samples += [f'{prefix}_normalized.sf']
                
         samples = new_samples
