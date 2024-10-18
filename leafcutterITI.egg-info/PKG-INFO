@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: leafcutterITI
-Version: 0.2.38
+Version: 0.2.39
 Summary: LeafcutterITI implementation
 Author: Xingpei Zhang, David A Knowles
 License: MIT License
@@ -97,10 +97,10 @@ Optional Parameters:
 
 --minintronlen          The minimum allowed intron length for introns (default: 50)
 
---quality_control       Whether to remove pseudogene, and decay transcript (default: True)
+--no_quality_control  A flag on whether not to remove pseudogene, and decay transcript
 
--v, --virtual_intron    Whether to compute virtual intron that can be used to capture
-                        AFE and ALE usage, a testing feature (default: None)
+-v, --virtual_intron    A flag on whether to compute virtual intron that can be used to capture
+                        AFE and ALE usage, a testing feature
 
 --single_cell           Whether to build matrices for isoform to intron and exon, required if dealing with\
                         single cell data from alevin-fry (default: True)
@@ -111,7 +111,7 @@ Optional Parameters:
 
 ```
 usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
-                    [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
+                    [--cluster_def] [-o/--outprefix] [--use_TPM] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio]
 or when install with pip
 leafcutterITI-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
@@ -135,10 +135,10 @@ Optional Parameters:
 
 -o, --outprefix         The prefix for output files (default: Leafcutter_)
 
--n, --normalization     Whether to performance normalization, if not use TPM directly (default: True)
+--use_TPM               A flag on whether to use TPM or normalized count
 
---preprocessed          Whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
-                        perform normalization again (default: False) 
+--preprocessed          A flag on Whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
+                        perform normalization again
 
 --samplecutoff          Minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
 
@@ -200,11 +200,11 @@ Optional Parameters:
 
 --thread                The number of threads used for parallel computation, should not be too large to avoid crash (default: 8)
 
---normalization         Whether to use normalized counts. If not, use TPM directly (default: True)
+--use_TPM               A flag on whether to use TPM or normalized count
 
---preprocessed          Whether pseudobulk generation and EM were done, if true, then the pipeline starts from counting intron (default: False)
+--preprocessed          A flag on whether pseudobulk generation and EM were done, if true, then the pipeline starts from counting intron (default: False)
 
--v,--with_virtual       Whether the map that contain virtual intron to capture AFE and ALE(default: False)
+-v,--with_virtual       A flag on whether the map that contain virtual intron to capture AFE and ALE
 
 --samplecutoff          Minimum Normalized count/TPM for an isoform in a sample to count as exist (default: 0.1)
 
