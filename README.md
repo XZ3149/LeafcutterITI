@@ -77,10 +77,12 @@ Optional Parameters:
 usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [--use_TPM] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--normalization_scale]
+                    [--read_len] [--not_paired_end] [--overhang] [--sizing_factor]
 or when install with pip
 leafcutterITI-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--normalization_scale]
+                    [--read_len] [--not_paired_end] [--overhang] [--sizing_factor]
 
 
 Mandatory parameters:
@@ -103,8 +105,8 @@ Optional Parameters:
 
 --preprocessed          A flag on Whether the files provided are already normalized, mainly for rerunning the pipeline and don't 
                         perform normalization again
---normalization_scale   The mode use for normaliztion, whether the count/TPM scale is based on local (gene level) or global level, can only input
-                        local or global (default: local)
+--normalization_scale   The mode use for normaliztion, whether the count/TPM scale is based on junction count simulation, local (gene level) or global level,
+                        can only input junction, local, or global (default: junction)
 
 --samplecutoff          Minimum Normalized count/TPM for an intron in a sample to count as exist (default: 0)
 
@@ -113,6 +115,15 @@ Optional Parameters:
 --m, --minclucounts     Minimum Normalized count/TPM to support a cluster (default: 30)
 
 -r, --mincluratio       Minimum fraction of reads in a cluster that supports an intron (default: 0.01)
+
+--read_len              The read length of sequencing data, use to simulate junction count, only work when normalization_scale = "junction"
+
+--not_paired_end        Whether the reads are not paired end use to simulate junction count, only work when normalization_scale = "junction"
+                        (default: False)
+--overhang              The oeverhand that would like to use, could be set to zero, use to simulate junction count, 
+                        only work when normalization_scale = junction (default: 2)
+
+--sizing_factor         The sizing factor for junction simulation normalization to better calibrate the p-values (default: 1)
 
 ```
 
