@@ -229,8 +229,8 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
     return  filtered_df
 
 
-# not in use
-def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w):
+
+def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w, normalize_mode, read_length, paired_end , overhang, sizing_factor):
     """
     This is the helper function for pseudo_eq_conversion, this function will be use to enable multiprocessing
     This function will be called by parallel_EM_processing
@@ -242,7 +242,25 @@ def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w):
     
     alpha = calcutta_functions.EM(temp_sample, ec_transcript_input, w)
     TPM = alpha * 1000000
-    count = (alpha * total_count)  # TPM to count conversion
+    
+    
+    if normalize_mode == 'global':
+    
+        count = (alpha * total_count)  # TPM to count conversion
+    else:
+        count = alpha / w # expected count of each transcript should be poportional to the value of TPM * effective_len for each transcript
+        # w = 1/effective_len
+        count = (count / count.sum()) * total_count
+        
+        if paired_end:
+            
+            effective_read_len = (read_length - overhang) * 2 * sizing_factor
+        else:
+            effective_read_len = (read_length - overhang)  * sizing_factor
+            
+        count = count * w * effective_read_len
+        
+        
     # we don't need the actual count, we just need a scale that represent the support level of the TPM value
     # TPM * total_count will give a count-like value that retain the TPM ratio of transcripts
 
@@ -254,10 +272,12 @@ def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w):
     return TPM, count
 
 
-def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread):
+
+def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread,normalize_mode, read_length, paired_end , overhang, sizing_factor):
    
 
-    results = Parallel(n_jobs=thread)(delayed(process_pseudo_row)(i,cell_ec_sparse_pseudo_filt, ec_transcript_input, w) \
+    results = Parallel(n_jobs=thread)(delayed(process_pseudo_row)(i,cell_ec_sparse_pseudo_filt, ec_transcript_input, w, \
+                                                                  normalize_mode, read_length, paired_end , overhang, sizing_factor) \
                                   for i in range(cell_ec_sparse_pseudo_filt.shape[0]))
 
     # Extracting results and combining them into matrices
@@ -282,7 +302,8 @@ def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, t
 
 
 
-def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5, min_transcript = 0, out_prefix= '', threshold = 0.1, thread =8):
+def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5, min_transcript = 0, out_prefix= '', threshold = 0.1, thread =8, \
+                         normalize_mode = 'junction', read_length = 100, paired_end = True, overhang = 2, sizing_factor = 1):
     """
     
 
@@ -402,7 +423,8 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     ec_transcript_input = ec_transcript_ffff.tocoo()
     
     
-    pseudo_TPM, pseudo_count = parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread)
+    pseudo_TPM, pseudo_count = parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread, \
+                                                      normalize_mode,read_length, paired_end , overhang, sizing_factor)
     
     """
     pseudo_TPM = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
@@ -668,9 +690,16 @@ def LeafcutterITI_scITI(options):
 
         # step 2: compute the pseudobulk isoform matrix 
     
+        paired_end = (not options.not_paired_end)
+        min_transcript = 0
+        
+        pseudo_eq_conversion(options.alevin_dir, options.salmon_ref, pseudobulk_name, options.min_eq, min_transcript , \
+                             out_prefix, options.samplecutoff,  options.thread, options.normalization_scale,
+                                                 options.read_length, paired_end, options.overhang, options.sizing_factor)
     
-        pseudo_eq_conversion(options.alevin_dir, options.salmon_ref, pseudobulk_name, min_EC = options.min_eq, min_transcript = 0, \
-                             out_prefix= out_prefix, threshold= options.samplecutoff, thread = options.thread)
+    
+    
+    
     
         sys.stderr.write("pseudobulk eq matrix were computed\n")
     
@@ -814,6 +843,28 @@ if __name__ == "__main__":
                   help="minimum fraction of reads in a cluster that support a junction (default 0.01)")
 
 
+    parser.add_option("--normalization_scale", dest="normalization_scale", default = 'junction',
+                  help="The mode use for normaliztion, whether the count/TPM scale is based on junction count simulation, local (gene level)\
+                        can only input junction or global (default: junction)")     
+    
+    parser.add_option("--read_len", dest="read_length", default = 100, type = "int",
+                  help="The read length of sequencing data, use to simulate junction count, only work when normalization_scale = junction\
+                  (default: 100)")
+                  
+    parser.add_option("--overhang", dest="overhang", default = 2, type = "int",
+                      help="The oeverhand that would like to use, could be set to zero, use to simulate junction count, \
+                      only work when normalization_scale = junction (default: 2)")
+
+    parser.add_option("--sizing_factor", dest="sizing_factor", default = 1, type = "float",
+                      help="The sizing factor for junction simulation normalization to better calibrate the p-values (default: 1)")
+                  
+    parser.add_option("--not_paired_end", dest="not_paired_end", default = False,action="store_true",
+                  help="Whether the reads are not paired end use to simulate junction count, only work when normalization_scale = junction\
+                      (default: False)")
+    
+    
+    
+    
     
     (options, args) = parser.parse_args()
 
@@ -845,6 +896,9 @@ if __name__ == "__main__":
         sys.stderr.write(f'reading barcodes to pseudobulk sample from {options.barcodes_clusters}\n')
         sys.stderr.write(f'merging barcodes using {options.pseudobulk_method}\n')
     
+    
+    if options.normalization_scale != 'junction' and options.normalization_scale != 'global':
+        sys.exit("Error: invalid normalization scale...\n")
 
         
     record = f'{options.outprefix}clustering_parameters.txt'

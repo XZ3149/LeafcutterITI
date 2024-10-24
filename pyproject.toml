@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "leafcutterITI"
 description='LeafcutterITI implementation'
 authors = [{name = "Xingpei Zhang"}, {name="David A Knowles"}]
-version = "0.2.39"
+version = "0.2.44"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [

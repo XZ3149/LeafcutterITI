@@ -783,11 +783,35 @@ def count_TPM_normalization_global(quant_file, gft_file, out_prefix= None):
     scale = df['NumReads'].sum() / df['TPM'].sum()
   
 
-    df['normalized_count'] = scale * df[TPM] 
+    df['normalized_count'] = scale * df['TPM'] 
 
     # Use the out_prefix to determine the output file name
     output_file = f'{out_prefix}_normalized.sf' if out_prefix else 'normalized.sf'
     df.to_csv(output_file, sep='\t', index=False)
+    
+    
+    
+
+def count_TPM_normalization_junction_simulation(quant_file, read_length, paired_end = True, overhang = 2, sizing_factor = 1, out_prefix = None):
+    """
+    This function take a quant.sf file from salmon output and normalize it based on
+    expected_count * effective_lenth/read_length to simulate a count distribution for a junction 
+    The read_length double when the read is pair_end
+    
+    """
+    
+    df = pd.read_csv(quant_file, sep='\t')
+    df = df[df['TPM'] > 0]
+    if paired_end == True: 
+        eff_read_length = (read_length - overhang) * 2 * sizing_factor
+    else:
+        eff_read_length = (read_length - overhang) * sizing_factor
+        
+    df['normalized_count'] = df['NumReads'] * (eff_read_length/df['EffectiveLength'])
+    
+    output_file = f'{out_prefix}_normalized.sf' if out_prefix else 'normalized.sf'
+    df.to_csv(output_file, sep='\t', index=False)
+    
 
 
 
@@ -848,9 +872,15 @@ def LeafcutterITI_clustering(options):
         for sample in samples:
             prefix = sample.split(".")[0] # get rid of the .sf
 
-            if normalization_scale == 'global':
+            if options.normalization_scale == 'junction':
+                
+                paired_end = (not options.not_paired_end)
+                
+                count_TPM_normalization_junction_simulation(sample, options.read_length, paired_end, \
+                                                            options.overhang, options.sizing_factor, prefix)
+            elif options.normalization_scale == 'global':
                 count_TPM_normalization_global(sample, options.annot, prefix)
-            elif normalization_scale == 'local':
+            elif options.normalization_scale == 'local':
                 count_TPM_normalization_local(sample, options.annot, prefix)
             else: 
                 sys.exit("Error: invalid normalization scale...\n")
@@ -934,8 +964,8 @@ if __name__ == "__main__":
                   help="output prefix , should include the diretory address if not\
                   in the same dic (default leafcutterITI_)")    
     
-    parser.add_option("--normalization_scale", , dest="normalization_scale", default = 'local',
-                  help="the scale used for normalization, local normnalize based on gene, global 
+    parser.add_option("--normalization_scale", dest="normalization_scale", default = 'junction',
+                  help="the scale used for normalization, local normnalize based on gene, global \
                   use all reads/all TPMs prefix (default: local)")                  
 
     parser.add_option("--use_TPM", dest = "use_TPM", action="store_true",default = False,
@@ -944,7 +974,9 @@ if __name__ == "__main__":
     parser.add_option("--preprocessed", dest="preprocessed", default = False,action="store_true",
                   help="Whether normalization already been done for the count_files (default: False)")
     
+
     
+
         
     parser.add_option("--samplecutoff", dest="samplecutoff", default = 0, type="float",
                   help="minimum count for an intron in a sample to count as exist(default: 0)")
@@ -958,7 +990,20 @@ if __name__ == "__main__":
     parser.add_option("-r", "--mincluratio", dest="mincluratio", default = 0.01, type="float",
                   help="minimum fraction of reads in a cluster that support a junction (default 0.01)")
 
+    parser.add_option("--read_len", dest="read_length", default = 100, type = "int",
+                  help="The read length of sequencing data, use to simulate junction count, only work when normalization_scale = junction\
+                  (default: 100)")
+                  
+    parser.add_option("--overhang", dest="overhang", default = 2, type = "int",
+                      help="The oeverhand that would like to use, could be set to zero, use to simulate junction count, \
+                      only work when normalization_scale = junction (default: 2)")
 
+    parser.add_option("--sizing_factor", dest="sizing_factor", default = 1, type = "float",
+                      help="The sizing factor for junction simulation normalization to better calibrate the p-values (default: 1)")
+                  
+    parser.add_option("--not_paired_end", dest="not_paired_end", default = False,action="store_true",
+                  help="Whether the reads are not paired end use to simulate junction count, only work when normalization_scale = junction\
+                      (default: False)")
     
     (options, args) = parser.parse_args()
 
