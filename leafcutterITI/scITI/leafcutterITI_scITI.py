@@ -230,7 +230,8 @@ def check_barcodes_exsitent(barcode_pseudo_df, valid_barcodes, out_prefix):
 
 
 
-def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w, normalize_mode, read_length, paired_end , overhang, sizing_factor):
+def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w, normalize_mode, read_length, paired_end , overhang, \
+                       sizing_factor,bool_spliced_trans):
     """
     This is the helper function for pseudo_eq_conversion, this function will be use to enable multiprocessing
     This function will be called by parallel_EM_processing
@@ -246,7 +247,24 @@ def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w, no
     
     if normalize_mode == 'global':
     
-        count = (alpha * total_count)  # TPM to count conversion
+        count = (alpha * total_count)  * sizing_factor# TPM to count conversion
+    elif normalize_mode == 'snRNA':
+        # attribute the count of unspliced RNA to spliced RNA based on the spliced RNA ratio
+        count = np.where(bool_spliced_trans == 1, alpha, 0)
+        count = count / w
+        count = (count / count.sum()) * total_count
+        
+        
+        if paired_end:
+            
+            effective_read_len = (read_length - overhang) * 2 * sizing_factor
+        else:
+            effective_read_len = (read_length - overhang)  * sizing_factor
+            
+        count = count * w * effective_read_len
+        
+          
+        
     else:
         count = alpha / w # expected count of each transcript should be poportional to the value of TPM * effective_len for each transcript
         # w = 1/effective_len
@@ -273,11 +291,12 @@ def process_pseudo_row(i, cell_ec_sparse_pseudo_filt, ec_transcript_input, w, no
 
 
 
-def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread,normalize_mode, read_length, paired_end , overhang, sizing_factor):
+def parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread,normalize_mode, read_length, paired_end , overhang, sizing_factor,\
+                           bool_spliced_trans):
    
 
     results = Parallel(n_jobs=thread)(delayed(process_pseudo_row)(i,cell_ec_sparse_pseudo_filt, ec_transcript_input, w, \
-                                                                  normalize_mode, read_length, paired_end , overhang, sizing_factor) \
+                                                                  normalize_mode, read_length, paired_end , overhang, sizing_factor,bool_spliced_trans) \
                                   for i in range(cell_ec_sparse_pseudo_filt.shape[0]))
 
     # Extracting results and combining them into matrices
@@ -417,6 +436,9 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
 
 
     feature_lengths, w = calcutta_functions.get_feature_weights(features_ff, transcript_lengths_dic)
+    
+    
+    bool_spliced_trans = np.array([0 if '-I' in value else 1 for value in features_ff]) # Knowing what isofrom is spliced and which is unspliced
 
 
     # step 5: compute pseudo transcript matrix:
@@ -424,7 +446,7 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     
     
     pseudo_TPM, pseudo_count = parallel_EM_processing(cell_ec_sparse_pseudo_filt, ec_transcript_input, w, thread, \
-                                                      normalize_mode,read_length, paired_end , overhang, sizing_factor)
+                                                      normalize_mode,read_length, paired_end , overhang, sizing_factor, bool_spliced_trans)
     
     """
     pseudo_TPM = csr_matrix((0, ec_transcript_input.shape[1]))  # Initialize an empty sparse matrix
@@ -467,9 +489,9 @@ def pseudo_eq_conversion(alevin_dir, salmon_ref, barcode_pseudo_file, min_EC = 5
     # step 6: store matrices and eliminate unspliced isoform as they doesn't excised intron    
     pseudo_names = row_names
     
-    spliced_indices = [i for i, s in enumerate(features_ff) if "ENSMUSG" not in s]    
-    spliced_feature = [s for i,s in enumerate(features_ff) if "ENSMUSG" not in s]
-    unspliced_indices = [i for i, s in enumerate(features_ff) if "ENSMUSG" in s]
+    spliced_indices = [i for i, s in enumerate(features_ff) if "-I" not in s]    
+    spliced_feature = [s for i,s in enumerate(features_ff) if "-I" not in s]
+    unspliced_indices = [i for i, s in enumerate(features_ff) if "-I" in s]
 
     spliced_pseudo_TPM = pseudo_TPM.tocsr()[:,spliced_indices]
     spliced_pseudo_count = pseudo_count.tocsr()[:,spliced_indices]
@@ -563,6 +585,10 @@ def sc_intron_count(reference_directory, pseudo_matrix_file, pseudo_cols_file, p
     with open(pseudo_cols_file, 'r') as input_file:
         for line in input_file:
             pseudo_cols.append(line.split('.')[0]) 
+
+    
+    
+
 
     pseudo_rows = [] #barcodes
     with open(pseudo_rows_file, 'r') as input_file:
@@ -844,8 +870,8 @@ if __name__ == "__main__":
 
 
     parser.add_option("--normalization_scale", dest="normalization_scale", default = 'junction',
-                  help="The mode use for normaliztion, whether the count/TPM scale is based on junction count simulation, local (gene level)\
-                        can only input junction or global (default: junction)")     
+                  help="The mode use for normaliztion, whether the count/TPM scale is based on junction count simulation,\
+                      snRNA (attribute unspliced to spliced), and global. Can only input junction, snRNA, or global (default: junction)")     
     
     parser.add_option("--read_len", dest="read_length", default = 100, type = "int",
                   help="The read length of sequencing data, use to simulate junction count, only work when normalization_scale = junction\
@@ -897,7 +923,7 @@ if __name__ == "__main__":
         sys.stderr.write(f'merging barcodes using {options.pseudobulk_method}\n')
     
     
-    if options.normalization_scale != 'junction' and options.normalization_scale != 'global':
+    if options.normalization_scale != 'junction' and options.normalization_scale != 'global' and options.normalization_scale != 'snRNA':
         sys.exit("Error: invalid normalization scale...\n")
 
         
