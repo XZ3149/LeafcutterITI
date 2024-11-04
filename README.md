@@ -198,10 +198,9 @@ Optional Parameters:
 --normalization_scale   The mode use for normaliztion, whether the count/TPM scale is based on junction count simulation, local (gene level) or global level,
                         can only input junction, local, or global (default: junction)
 
---read_len              The read length of sequencing data, use to simulate junction count, only work when normalization_scale = "junction"
+--read_len              The read length of sequencing data, use to simulate junction count, only work when normalization_scale = "junction" (default: 100)
 
---not_paired_end        Whether the reads are not paired end use to simulate junction count, only work when normalization_scale = "junction"
-                        (default: False)
+--not_paired_end        Whether the reads are not paired end use to simulate junction count, only work when normalization_scale = "junction" (default: False)
 --overhang              The oeverhand that would like to use, could be set to zero, use to simulate junction count, 
                         only work when normalization_scale = junction (default: 2)
 
