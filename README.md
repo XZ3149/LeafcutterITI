@@ -1,14 +1,15 @@
 # tealeaf ( previously LeafCutterITI)
 
+## By Xingpei Zhang and David A. Knowles
 
-### Citation:
+### Citations:
 **Alamancos, G. P., Pagès, A., Trincado, J. L., Bellora, N., & Eyras, E. (2015). Leveraging transcript quantification for fast computation of alternative splicing profiles. RNA , 21(9), 1521–1531. https://doi.org/10.1261/rna.051557.115**
+
+**Garrido-Martín, D., Palumbo, E., Guigó, R., & Breschi, A. (2018). ggsashimi: Sashimi plot revised for browser-and annotation-independent splicing visualization. PLoS computational biology, 14(8), e1006360.**
 
 **Li, Y. I., Knowles, D. A., Humphrey, J., Barbeira, A. N., Dickinson, S. P., Im, H. K., & Pritchard, J. K. (2018). Annotation-free quantification of RNA splicing using LeafCutter. Nature Genetics, 50(1), 151–158. https://doi.org/10.1038/s41588-017-0004-9**
 
 **Patro, R., Duggal, G., Love, M. I., Irizarry, R. A., & Kingsford, C. (2017). Salmon provides fast and bias-aware quantification of transcript expression. Nature Methods, 14(4), 417–419. https://doi.org/10.1038/nmeth.4197**
-
-**Garrido-Martín, D., Palumbo, E., Guigó, R., & Breschi, A. (2018). ggsashimi: Sashimi plot revised for browser-and annotation-independent splicing visualization. PLoS computational biology, 14(8), e1006360.**
 
 
 ### Requirements (versions used for development)
@@ -34,7 +35,7 @@
 #### Other dependencies for Leafcutter as listed in https://github.com/davidaknowles/leafcutter/tree/master, especially for Leafcutter_ds
 
 ## tealeaf
-A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. Can also be install as a command line tool with `pip install leafcutterITI`
+A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. Can also be install as a command line tool with `pip install tealeaf`
 
 ![tealeaf_Workflow](figures/tealeaf_workflow.png)
 
@@ -48,10 +49,10 @@ There are three parts of LeafcutterITI:
 
 ### tealeaf_map_gen
 ```
-usage: python leafcutterITI_map_gen.py [-a/--annot] [--annot_source] [-o/--outprefix] 
+usage: python tealeaf_map_gen.py [-a/--annot] [--annot_source] [-o/--outprefix] 
                      [--maxintronlen] [--minintronlen] [-v/--virtual_intron] [--single_cell]
 or when install with pip
-leafcutterITI-map [-a/--annot] [--annot_source] [-o/--outprefix] [--maxintronlen]
+leafcutterITI-tealeaf [-a/--annot] [--annot_source] [-o/--outprefix] [--maxintronlen]
                       [--minintronlen] [-v/--virtual_intron] [--single_cell]
 
 
@@ -83,12 +84,12 @@ Optional Parameters:
 ### tealeaf_clustering
 
 ```
-usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
+usage: python tealeaf_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [--use_TPM] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--normalization_scale]
                     [--read_len] [--not_paired_end] [--overhang] [--sizing_factor]
 or when install with pip
-leafcutterITI-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
+tealeaf-cluster [--map] [--count_files] [--connect_file] [-a/--annot]
                     [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff]
                     [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--normalization_scale]
                     [--read_len] [--not_paired_end] [--overhang] [--sizing_factor]
@@ -140,7 +141,7 @@ Optional Parameters:
 ### tealeaf_sc
 
 ```
-usage: python leafcutterITI_scITI.py [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
+usage: python tealeaf_sc.py [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
                           [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
                           [--thread] [--cluster_def] [-o/--outprefix] [-n/--normalization] [--samplecutoff] 
                           [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
@@ -148,7 +149,7 @@ usage: python leafcutterITI_scITI.py [--alevin_dir] [--salmon_ref] [--ref_dir] [
 
 
 or when install with pip
-leafcutterITI-scITI [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
+tealeaf-sc [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
                           [-n/--num_cell] [-k/--num_bootstrapping] [--min_eq] [--group_method] [--ref_prefix]
                           [--thread] [--cluster_def] [-o/--outprefix] [--normalization_scale] [--samplecutoff] 
                           [--introncutoff] [-m/--minclucounts] [-r/--mincluratio] [--preprocessed]
@@ -216,6 +217,30 @@ Optional Parameters:
 --sizing_factor         The sizing factor for junction simulation normalization to better calibrate the p-values (default: 1)
 
 ```
+
+
+### tealeaf_ggsashimi
+
+
+```
+usage: python tealeaf-ggsashimi.py
+
+
+or when install with pip
+tealeaf-ggsashimi
+
+
+Mandatory parameters:
+
+
+
+
+```
+
+
+
+
+
 
 ## Detailed Tutorial to run the LeafcutterITI
 
