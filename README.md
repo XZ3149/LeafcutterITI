@@ -1,4 +1,4 @@
-# LeafCutterITI
+# tealeaf ( previously LeafCutterITI)
 
 
 ### Citation:
@@ -7,6 +7,8 @@
 **Li, Y. I., Knowles, D. A., Humphrey, J., Barbeira, A. N., Dickinson, S. P., Im, H. K., & Pritchard, J. K. (2018). Annotation-free quantification of RNA splicing using LeafCutter. Nature Genetics, 50(1), 151–158. https://doi.org/10.1038/s41588-017-0004-9**
 
 **Patro, R., Duggal, G., Love, M. I., Irizarry, R. A., & Kingsford, C. (2017). Salmon provides fast and bias-aware quantification of transcript expression. Nature Methods, 14(4), 417–419. https://doi.org/10.1038/nmeth.4197**
+
+**Garrido-Martín, D., Palumbo, E., Guigó, R., & Breschi, A. (2018). ggsashimi: Sashimi plot revised for browser-and annotation-independent splicing visualization. PLoS computational biology, 14(8), e1006360.**
 
 
 ### Requirements (versions used for development)
@@ -19,13 +21,19 @@
 - pyranges
 - scipy
 
+### R Dependencies (for tealeaf-ggsashimi)
+- R
+- ggplot2 
+- data.table 
+- gridExtra 
+
 #### Additional Requirement for isoform quantification
 
 - salmon (v1.10.0)
 
 #### Other dependencies for Leafcutter as listed in https://github.com/davidaknowles/leafcutter/tree/master, especially for Leafcutter_ds
 
-## LeafcutterITI
+## tealeaf
 A modified version of Leafcutter that detects and analyzes alternative splicing events by quantifying excised introns by utilizing isoform abundance and transcriptome annotation. Can also be install as a command line tool with `pip install leafcutterITI`
 
 ![LeafcutterITI_Workflow](figures/LeafcutterITI_workflow.png)
@@ -33,11 +41,12 @@ A modified version of Leafcutter that detects and analyzes alternative splicing 
 
 
 There are three parts of LeafcutterITI: 
-- LeafcutterITI_map_gen
-- LeafcutterITI_clustering (for bulk & pseudobulk)
-- LeafcutterITI_scITI (for single-cell)
+- tealeaf_map_gen
+- tealeaf_clustering (for bulk & bulk-like single-cell or pseudobulk)
+- tealeaf_sc (for single-cell)
+- tealeaf-ggsashimi (utlize adapted ggsashimi for sashimi plotting)
 
-### LeafcutterITI_map_gen
+### tealeaf_map_gen
 ```
 usage: python leafcutterITI_map_gen.py [-a/--annot] [--annot_source] [-o/--outprefix] 
                      [--maxintronlen] [--minintronlen] [-v/--virtual_intron] [--single_cell]
@@ -71,7 +80,7 @@ Optional Parameters:
 ```
 
 
-### LeafcutterITI_clustering
+### tealeaf_clustering
 
 ```
 usage: python leafcutterITI_clustering.py [--map] [--count_files] [--connect_file] [-a/--annot]
@@ -128,7 +137,7 @@ Optional Parameters:
 ```
 
 
-### LeafcutterITI_scITI
+### tealeaf_sc
 
 ```
 usage: python leafcutterITI_scITI.py [--alevin_dir] [--salmon_ref] [--ref_dir] [--barcodes_cluster] [--pseudobulk_samples]
