@@ -104,8 +104,13 @@ def EM(counts, ec_transcript_mat, w, iterations = 30):
         z = sp.diags(counts / ec_sums) @ alpha_w 
         alpha_new = sparse_sum(z,0)
         alpha_new /= alpha_new.sum()
-        #print(i,np.mean(np.abs(alpha - alpha_new)),end="\r")
+        
+        if i == 29:
+            print(i,np.mean(np.abs(alpha - alpha_new)))
+        
         alpha = alpha_new
+        
+        
     return alpha
 
 

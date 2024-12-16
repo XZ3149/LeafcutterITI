@@ -148,10 +148,10 @@ def compute_transcript_intron_map(annot, out_prefix = '', annot_type = 'gencode'
                     
             
                     if current_exon[3] < next_exon[2]: # current_exon end < next_exon start, foward direction
-                        introns += [[i+1,current_exon[1], (current_exon[3]), next_exon[2]]]
+                        introns += [[i+1,current_exon[1], (current_exon[3]), next_exon[2] + 1]] # +1 to align with leafcutter intron
                         
                         # the precise location could be problematic, but it is defined th
-                        temp_name = f'{current_exon[1]}:{current_exon[3]}-{next_exon[2]}'
+                        temp_name = f'{current_exon[1]}:{current_exon[3]}-{next_exon[2] + 1}'
                         
                         add_near_exon_dic(near_exon_dic, temp_name, current_exon_name, next_exon_name) # add value to near_exon_dic
                         # use helper function to improve readbility
@@ -160,12 +160,11 @@ def compute_transcript_intron_map(annot, out_prefix = '', annot_type = 'gencode'
                         
                 
                     else: # current_exon start > next_exon end, backward direction
-                        introns += [[i+1,current_exon[1], (next_exon[3]), current_exon[2]]]
+                        introns += [[i+1,current_exon[1], (next_exon[3]), current_exon[2] + 1]] # +1 to align with leafcutter intron
                         
-                        temp_name = f'{current_exon[1]}:{next_exon[3]}-{current_exon[2]}'
+                        temp_name = f'{current_exon[1]}:{next_exon[3]}-{current_exon[2] + 1}'
                 
                         add_near_exon_dic(near_exon_dic, temp_name, current_exon_name, next_exon_name)
-                        
                         
                         intron_str_dic[temp_name] = '-'
         
@@ -522,9 +521,9 @@ def intron_source_generation(transcript_intron_map, out_prefix = ''):
 
 #######################################################################################################################################
 @timing_decorator
-def LeafcutterITI_map_generation(options):
+def tealeaf_map_generation(options):
     """
-    This this the main warper function for the LeafcutterITI map generation
+    This this the main warper function for the tealeaf map generation
 
     """
     
@@ -614,7 +613,7 @@ if __name__ == "__main__":
     
     write_options_to_file(options, record)
 
-    LeafcutterITI_map_generation(options)
+    tealeaf_map_generation(options)
     
     sys.stderr.write('Finish building Isofrom to intron map \n')
 

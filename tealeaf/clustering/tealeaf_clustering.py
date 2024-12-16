@@ -217,7 +217,7 @@ def count_introns(samples, trans_int_map_file, out_prefix = '', threshold = 0, T
 
 
 @timing_decorator
-def build_init_cluster(intron_count_file):
+def build_init_cluster(intron_count_file, connect_file):
     """
     Parameters
     ----------
@@ -228,33 +228,43 @@ def build_init_cluster(intron_count_file):
     Adds a 'Cluster' column to the CSV with cluster assignments for introns.
     """
     
+    
     # Read in the file
     df = pd.read_csv(intron_count_file, sep=' ')
-
+    
+    
+    connect_df = pd.read_csv(connect_file, sep = ' ')
+    intron_strand_dic = dict(zip(connect_df['intron'], connect_df['strand']))
+    df["Strand"] = df.Name.map(intron_strand_dic)
+                            
+    
+    
     # Sort the DataFrame as required
-    df.sort_values(by=['Chr', 'Start', 'End'], inplace=True)
+    df.sort_values(by=['Chr', 'Strand', 'Start', 'End'], inplace=True) # seperate the + and - strand intron
 
     # Initialize variables for tracking clusters
     cluster_num = 1
     #cluster_gene = df.iloc[0]['Gene'] 
     cluster_end = df.iloc[0]['End']
     cluster_chr = df.iloc[0]['Chr']
+    cluster_strand = df.iloc[0]['Strand']
 
     # Function to apply to each row to determine cluster
     def check_new_cluster(row):
         nonlocal cluster_num
         nonlocal cluster_chr
         nonlocal cluster_end
+        nonlocal cluster_strand
         #nonlocal cluster_gene #used in previous version, plan to removed in further version
         
 
         # Start a new cluster if the gene changes or there's no overlap with the current cluster
         # no need to check for sttart as we sort value based on Start
-        if row['Chr'] != cluster_chr or row['Start'] > cluster_end:
+        if row['Chr'] != cluster_chr or row['Strand'] != cluster_strand or row['Start'] > cluster_end:
             cluster_num += 1
             cluster_end = row['End']
             cluster_chr = row['Chr']
-            #cluster_gene = row['Gene']
+            cluster_strand = row['Strand']
             
         else:
             cluster_end = max(cluster_end, row['End'])
@@ -263,7 +273,7 @@ def build_init_cluster(intron_count_file):
     # Apply the function to each row in the DataFrame
     # df['Cluster'] = df.apply(check_new_cluster, axis=1)
     df.insert(1, 'Cluster', df.apply(check_new_cluster, axis=1))
-
+    df.drop(columns = ['Strand'], inplace = True)
     # Save the modified DataFrame back to a file
     df.to_csv(intron_count_file, sep=' ', index=False)
 
@@ -859,9 +869,9 @@ def extract_transcript_to_gene_map(gtf_file):
 
 
 @timing_decorator
-def LeafcutterITI_clustering(options):
+def tealeaf_clustering(options):
     """
-    This is the main function for LeafcutterITI clustering
+    This is the main function for tealeaf clustering
     """
 
     samples = input_file_processing(options.count_files)
@@ -908,7 +918,7 @@ def LeafcutterITI_clustering(options):
     
     
     # build initial cluster
-    build_init_cluster(f'{out_prefix}count_intron')
+    build_init_cluster(f'{out_prefix}count_intron', options.connect_file)
     sys.stderr.write("Finished Initial Clustering\n")
 
 
@@ -1024,84 +1034,9 @@ if __name__ == "__main__":
         
 
    
-    LeafcutterITI_clustering(options)
+    tealeaf_clustering(options)
 
 
-
-
-
-
-
-
-# not in use
-class Intron_cluster:
-    # a class for introns cluster to improve readability of code
-    def __init__(self, intron):
-        # intron in format [start,end,count,name, [exon_slicesites]]
-        
-        
-        self.start = intron[0]
-        self.end = intron[1]
-        self.splicesites = set()
-        self.splicesites.add(intron[0])
-        self.splicesites.add(intron[1])
-        
-        self.exon_splicesites = set()
-        for site in intron[4]:
-            self.exon_splicesites.add(site)
-        
-        self.introns = [intron]
-        
-    def change_end(self,new_end):
-        
-        if self.end < new_end:
-            self.end = new_end
-
-    def change_start(self, new_start):
-        
-        if self.start > new_start:
-            self.start = new_start
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
     
 
 

@@ -4,17 +4,18 @@ import setuptools
 
 
 setup(
-        name='leafcutterITI',
+        name='tealeaf',
         packages=find_packages(),
-        version='0.2.46',
-        description='LeafcutterITI implementation',
+        version='0.1.0',
+        description='tealeaf implementation',
         author='Xingpei Zhang, David A Knowles',
         license='MIT',
         entry_points={
             'console_scripts': [
-                'leafcutterITI-map = leafcutterITI.__main__:leafcutterITI_map_gen',
-                'leafcutterITI-cluster = leafcutterITI.__main__:leafcutterITI_clustering',
-                'leafcutterITI-scITI = leafcutterITI.__main__:leafcutterITI_scITI'
+                'tealeaf-map = tealeaf.__main__:tealeaf_map_gen',
+                'tealeaf-cluster = tealeaf.__main__:tealeaf_clustering',
+                'tealeaf-sc = tealeaf.__main__:tealeaf_sc',
+                'tealeaf-ggsashimi = tealeaf.__main__:tealeaf_ggsashimi'
             ],
         },
     )

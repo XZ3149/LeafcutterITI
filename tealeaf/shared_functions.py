@@ -11,7 +11,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.DtypeWarning)
 
 
 @timing_decorator
-def build_init_cluster(intron_count_file):
+def build_init_cluster(intron_count_file, connect_file):
     """
     Parameters
     ----------
@@ -22,37 +22,43 @@ def build_init_cluster(intron_count_file):
     Adds a 'Cluster' column to the CSV with cluster assignments for introns.
     """
     
+    
     # Read in the file
     df = pd.read_csv(intron_count_file, sep=' ')
-
+    
+    
+    connect_df = pd.read_csv(connect_file, sep = ' ')
+    intron_strand_dic = dict(zip(connect_df['intron'], connect_df['strand']))
+    df["Strand"] = df.Name.map(intron_strand_dic)
+                            
+    
+    
     # Sort the DataFrame as required
-    df.sort_values(by=['Chr', 'Start', 'End'], inplace=True)
+    df.sort_values(by=['Chr', 'Strand', 'Start', 'End'], inplace=True) # seperate the + and - strand intron
 
     # Initialize variables for tracking clusters
     cluster_num = 1
-    
+    #cluster_gene = df.iloc[0]['Gene'] 
     cluster_end = df.iloc[0]['End']
     cluster_chr = df.iloc[0]['Chr']
-    
-    #cluster_gene = df.iloc[0]['Gene'] 
-    
+    cluster_strand = df.iloc[0]['Strand']
 
     # Function to apply to each row to determine cluster
     def check_new_cluster(row):
         nonlocal cluster_num
         nonlocal cluster_chr
         nonlocal cluster_end
+        nonlocal cluster_strand
         #nonlocal cluster_gene #used in previous version, plan to removed in further version
         
 
         # Start a new cluster if the gene changes or there's no overlap with the current cluster
         # no need to check for sttart as we sort value based on Start
-        if row['Chr'] != cluster_chr or row['Start'] > cluster_end:
+        if row['Chr'] != cluster_chr or row['Strand'] != cluster_strand or row['Start'] > cluster_end:
             cluster_num += 1
-            
             cluster_end = row['End']
             cluster_chr = row['Chr']
-            #cluster_gene = row['Gene']
+            cluster_strand = row['Strand']
             
         else:
             cluster_end = max(cluster_end, row['End'])
@@ -61,13 +67,9 @@ def build_init_cluster(intron_count_file):
     # Apply the function to each row in the DataFrame
     # df['Cluster'] = df.apply(check_new_cluster, axis=1)
     df.insert(1, 'Cluster', df.apply(check_new_cluster, axis=1))
-
+    df.drop(columns = ['Strand'], inplace = True)
     # Save the modified DataFrame back to a file
     df.to_csv(intron_count_file, sep=' ', index=False)
-
-
-
-
 
 
 @timing_decorator

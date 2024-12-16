@@ -3,10 +3,10 @@ requires = ["setuptools>=61.0"] # to support project.scripts
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "leafcutterITI"
-description='LeafcutterITI implementation'
+name = "tealeaf"
+description='tealeaf implementation'
 authors = [{name = "Xingpei Zhang"}, {name="David A Knowles"}]
-version = "0.2.46"
+version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
@@ -18,9 +18,10 @@ dependencies = [
 license= {file = "LICENSE"}
 
 [project.scripts]
-leafcutterITI-map = 'leafcutterITI.__main__:leafcutterITI_map_gen'
-leafcutterITI-cluster = 'leafcutterITI.__main__:leafcutterITI_clustering'
-leafcutterITI-scITI = 'leafcutterITI.__main__:leafcutterITI_scITI'
+tealeaf-map = 'tealeaf.__main__:tealeaf_map_gen'
+tealeaf-cluster = 'tealeaf.__main__:tealeaf_clustering'
+tealeaf-sc = 'tealeaf.__main__:tealeaf_sc'
+tealeaf-ggsashimi = 'tealeaf.__main__:tealeaf_ggshashimi'
 
 [project.urls]
-Homepage = "https://github.com/XZ3149/LeafcutterITI"
+Homepage = "https://github.com/XZ3149/tealeaf"

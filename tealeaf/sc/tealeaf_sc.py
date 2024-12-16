@@ -15,7 +15,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.DtypeWarning)
 import re
 import leafcutterITI.utils
 from leafcutterITI.utils import timing_decorator,write_options_to_file
-from leafcutterITI.scITI import calcutta_functions
+from leafcutterITI.scITI import sc_utils
 from leafcutterITI.shared_functions import build_init_cluster, process_clusters, compute_ratio
 
 from joblib import Parallel, delayed
@@ -679,8 +679,8 @@ def sc_intron_count(reference_directory, pseudo_matrix_file, pseudo_cols_file, p
     new_order = list(df_exon.columns)[-3:] + list(df_exon.columns)[:-3] 
     df_exon = df_exon[new_order]
     
-    
-    
+    df_intron.index.name = 'Name'
+    df_exon.index.name = 'Name'
 
     df_intron.sort_values(by=['Chr', 'Start', 'End'], inplace=True)
     df_exon.sort_values(by=['Chr', 'Start', 'End'], inplace=True)
@@ -688,10 +688,11 @@ def sc_intron_count(reference_directory, pseudo_matrix_file, pseudo_cols_file, p
     df_exon.to_csv(f'{out_prefix}count_exon', sep = ' ')    
 
 
+
 @timing_decorator
-def LeafcutterITI_scITI(options):
+def tealeaf_sc(options):
     """
-    This is the main function for LeafcutterITI_scITI
+    This is the main function for tealeaf_sc
 
     """
     if options.preprocessed == False:
@@ -749,16 +750,18 @@ def LeafcutterITI_scITI(options):
     
     # step 4: clustering, using shared function with leafuctterITI
 
-
-    build_init_cluster(f'{out_prefix}count_intron')
-    
-    sys.stderr.write("Finished Initial Clustering\n")
-
-
     if options.with_virtual == False:
         connect_file = f'{ref_prefix}intron_exon_connectivity.tsv'
     else:
         connect_file = f'{ref_prefix}intron_exon_connectivity_with_virtual.tsv'
+
+
+
+    build_init_cluster(f'{out_prefix}count_intron', connect_file)
+    
+    sys.stderr.write("Finished Initial Clustering\n")
+
+
 
     process_clusters(f'{out_prefix}count_intron', f'{out_prefix}count_exon', \
                      connect_file, \
@@ -933,7 +936,7 @@ if __name__ == "__main__":
         
     
 
-    LeafcutterITI_scITI(options)
+    tealeaf_sc(options)
 
 
 

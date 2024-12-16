@@ -1,4 +1,0 @@
-numpy
-pyranges
-pandas
-scipy
