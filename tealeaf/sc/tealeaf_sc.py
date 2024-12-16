@@ -13,10 +13,10 @@ import os
 warnings.simplefilter(action='ignore', category=pd.errors.DtypeWarning)
 
 import re
-import leafcutterITI.utils
-from leafcutterITI.utils import timing_decorator,write_options_to_file
-from leafcutterITI.scITI import sc_utils
-from leafcutterITI.shared_functions import build_init_cluster, process_clusters, compute_ratio
+import tealeaf.utils
+from tealeaf.utils import timing_decorator,write_options_to_file
+from tealeaf.sc import sc_utils
+from tealeaf.shared_functions import build_init_cluster, process_clusters, compute_ratio
 
 from joblib import Parallel, delayed
 
