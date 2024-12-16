@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import sys
 import warnings
-import leafcutterITI.utils
-from leafcutterITI.utils import timing_decorator,write_options_to_file
+import tealeaf.utils
+from tealeaf.utils import timing_decorator,write_options_to_file
 import scipy
 import scipy.sparse
 from scipy.sparse import csr_matrix, save_npz, load_npz
